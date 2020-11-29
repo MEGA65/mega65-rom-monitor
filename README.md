@@ -15,3 +15,16 @@ A full documentation is in progress as chapter in the MEGA65 User's Guide.
 The source code can be assembled with the BSA assembler
 https://github.com/Edilbert/BSA
 
+Credits
+=======
+
+I dedicate this monitor program to Jim Butterfield the 6502 guru.
+
+This work was motivated by and written for the MEGA65 team.
+
+Special thanks go to:
+
+Gábor for the excellent emulator xemu
+Anton, who built and lent me a MEGA65 prototype
+Paul and Deft, for permanent motivation.
+
