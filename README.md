@@ -25,6 +25,8 @@ This work was motivated by and written for the MEGA65 team.
 Special thanks go to:
 
 Gábor for the excellent emulator xemu
+
 Anton, who built and lent me a MEGA65 prototype
-Paul and Deft, for permanent motivation.
+
+Paul and Deft, for permanent motivation
 
