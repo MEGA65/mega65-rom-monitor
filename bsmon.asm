@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  28-Nov_2020 *
+* for The MEGA65  03-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -58,13 +58,14 @@ Long_CT    .BSS 4  ; 32 bit counter
 Long_PC    .BSS 4  ; 32 bit program counter
 Long_DA    .BSS 4  ; 32 bit data pointer
 
-; Flags used in BBR BBS instructions
+; Flags are  used in BBR BBS instructions
 
 Adr_Flags  .BSS 1
 Mode_Flags .BSS 1
 Op_Code    .BSS 1
 Op_Flag    .BSS 1
-COL        .BSS 1
+Op_Size    .BSS 1
+Dig_Cnt    .BSS 1
 Buf_Index  .BSS 1
 
 ; operating system variables
@@ -99,13 +100,17 @@ EXMON      = $032e
 Mon_Data   = $0400      ; 32 byte bufer for hunt and filename
 X_Vector   = $0420      ; exit vector (ROM version dependent)
 
-Op_Size    = $042c
-Op_Mne     = $042d
+Disk_RW    = $0422
+Disk_Unit  = $0423
+Disk_Drive = $0424
+Disk_Track = $0425
+Disk_Sector= $0426
+Last_Sector= $0427
 
-Op_Bits    = $0434
-Op_Ix      = $0435
-Ix_Mne     = $0437
-Op_Len     = $0439
+Op_Mne     = $0433      ; 3 bytes for mnemonic
+Op_Ix      = $0437      ; type of constant
+Ix_Mne     = $0438      ; index to mnemonics table
+Op_Len     = $0439      ; length of operand
 
 Unit       = $1106
 EXIT_OLD   = $cf2e      ; exit address for ROM 910110
@@ -116,8 +121,24 @@ JSRFAR     = $ff6e
 JMPFAR     = $ff71
 LDA_FAR    = $ff74
 STA_FAR    = $ff77
+CMP_FAR    = $ff7a
 PRIMM      = $ff7d
+CINT       = $ff81
+IOINIT     = $ff84
 SETMSG     = $ff90
+SECOND     = $ff93
+TKSA       = $ff96
+MEMTOP     = $ff99
+MEMBOT     = $ff9c
+KEY        = $ff9f
+SETTMO     = $ffa2
+ACPTR      = $ffa5
+CIOUT      = $ffa8
+UNTALK     = $ffab
+UNLSN      = $ffae
+LISTEN     = $ffb1
+TALK       = $ffb4
+READSS     = $ffb7
 SETLFS     = $ffba
 SETNAM     = $ffbd
 OPEN       = $ffc0
@@ -153,7 +174,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 28-NOV-20",0
+        .BYTE " BIT SHIFTER 03-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -418,7 +439,6 @@ Module Mon_Select
          TXA
          ASL  A
          TAX
-         JSR  Got_LAC           ; get 1st. parameter
          JMP  (Jump_Table,X)
 EndMod
 
@@ -488,7 +508,7 @@ Module LAC_To_PC
 
 ; called from Mon_Set_Register, Mon_Go and Mon_JSR
 ; as the first instruction. The carry flag was set from
-; the routine Get_LAC if an error occured.
+; the routine Got_LAC if an error occured.
 ; Notice that the Bank, PCH and PCL values are stored
 ; high to low, reverse to the standard order.
 
@@ -509,16 +529,13 @@ EndMod
 Module LAC_To_LPC
 *****************
 
-; copy long accumulator to long program counter
-
-         LDA  Long_AC
-         STA  Long_PC
-         LDA  Long_AC+1
-         STA  Long_PC+1
-         LDA  Long_AC+2
-         STA  Long_PC+2
-         LDA  Long_AC+3
-         STA  Long_PC+3
+         PHX
+         LDX  #3
+_loop    LDA  Long_AC,X
+         STA  Long_PC,X
+         DEX
+         BPL  _loop
+         PLX
          RTS
 EndMod
 
@@ -526,16 +543,13 @@ EndMod
 Module LAC_To_LCT
 *****************
 
-; copy long accumulator to long counter
-
-         LDA  Long_AC
-         STA  Long_CT
-         LDA  Long_AC+1
-         STA  Long_CT+1
-         LDA  Long_AC+2
-         STA  Long_CT+2
-         LDA  Long_AC+3
-         STA  Long_CT+3
+         PHX
+         LDX  #3
+_loop    LDA  Long_AC,X
+         STA  Long_CT,X
+         DEX
+         BPL  _loop
+         PLX
          RTS
 EndMod
 
@@ -543,16 +557,13 @@ EndMod
 Module LAC_To_LDA
 *****************
 
-; copy long accumulator to long data
-
-         LDA  Long_AC
-         STA  Long_DA
-         LDA  Long_AC+1
-         STA  Long_DA+1
-         LDA  Long_AC+2
-         STA  Long_DA+2
-         LDA  Long_AC+3
-         STA  Long_DA+3
+         PHX
+         LDX  #3
+_loop    LDA  Long_AC,X
+         STA  Long_DA,X
+         DEX
+         BPL  _loop
+         PLX
          RTS
 EndMod
 
@@ -560,19 +571,15 @@ EndMod
 Module LAC_Plus_LCT
 *******************
 
+         PHX
+         LDX  #252              ; use ZP wrap around
          CLC
-         LDA  Long_AC
-         ADC  Long_CT
-         STA  Long_AC
-         LDA  Long_AC+1
-         ADC  Long_CT+1
-         STA  Long_AC+1
-         LDA  Long_AC+2
-         ADC  Long_CT+2
-         STA  Long_AC+2
-         LDA  Long_AC+3
-         ADC  Long_CT+3
-         STA  Long_AC+3
+_loop    LDA  Long_AC+4,X
+         ADC  Long_CT+4,X
+         STA  Long_AC+4,X
+         INX
+         BNE  _loop
+         PLX
          RTS
 EndMod
 
@@ -580,19 +587,15 @@ EndMod
 Module LAC_Minus_LPC
 ********************
 
+         PHX
+         LDX  #252              ; use ZP wrap around
          SEC
-         LDA  Long_AC
-         SBC  Long_PC
-         STA  Long_AC
-         LDA  Long_AC+1
-         SBC  Long_PC+1
-         STA  Long_AC+1
-         LDA  Long_AC+2
-         SBC  Long_PC+2
-         STA  Long_AC+2
-         LDA  Long_AC+3
-         SBC  Long_PC+3
-         STA  Long_AC+3
+_loop    LDA  Long_AC+4,X
+         SBC  Long_PC+4,X
+         STA  Long_CT+4,X
+         INX
+         BNE  _loop
+         PLX
          RTS
 EndMod
 
@@ -600,14 +603,14 @@ EndMod
 Module LAC_Compare_LPC
 **********************
 
-         LDA  Long_AC
-         CMP  Long_PC
-         LDA  Long_AC+1
-         SBC  Long_PC+1
-         LDA  Long_AC+2
-         SBC  Long_PC+2
-         LDA  Long_AC+3
-         SBC  Long_PC+3
+         PHX
+         LDX  #252              ; use ZP wrap around
+         SEC
+_loop    LDA  Long_AC+4,X
+         SBC  Long_PC+4,X
+         INX
+         BNE  _loop
+         PLX
          RTS
 EndMod
 
@@ -643,6 +646,18 @@ Module Inc_LPC
 _return  RTS
 EndMod
 
+**************
+Module Dec_LDA
+**************
+
+         LDA  Long_DA
+         ORA  Long_DA+1
+         BNE  _skip
+         DEW  Long_DA+2
+_skip    DEW  Long_DA
+         RTS
+EndMod
+
 ************
 Module Fetch
 ************
@@ -662,24 +677,23 @@ EndMod
 Module Mon_Memory
 *****************
 
+         JSR  Get_LAC           ; get 1st. parameter
          LDZ  #16               ; default row count
-         BCC  _param
-         BRA  _row
-
-_param   JSR  LAC_To_LPC        ; Long_PC = start address
-         JSR  Got_LAC           ; Long_AC = end address
+         BCS  _row              ; no address
+         JSR  LAC_To_LPC        ; Long_PC = start address
+         JSR  Get_LAC           ; Long_AC = end address
          BCS  _row              ; not given
 
-         JSR  LAC_Minus_LPC     ; Long_AC = range
+         JSR  LAC_Minus_LPC     ; Long_CT = range
          LBCC Mon_Error         ; negative range -> error
          LDX  #4                ; 16 bytes / line
          BBR7 MODE_80,_shift
          DEX                    ;  8 bytes / line
-_shift   LSR  Long_AC+1
-         ROR  Long_AC
+_shift   LSR  Long_CT+1
+         ROR  Long_CT
          DEX
          BNE  _shift
-         LDZ  Long_AC           ; row count
+         LDZ  Long_CT           ; row count
          INZ
 
 _row     JSR  STOP
@@ -712,9 +726,10 @@ EndMod
 Module Mon_Bits
 ***************
 
-         LBCS Mon_Error
+         JSR  Get_LAC           ; get 1st. parameter
+         BCS  _lab
          JSR  LAC_To_LPC        ; Long_PC = start address
-         JSR  Print_CR
+_lab     JSR  Print_CR
          LDA  #WHITE
          STA  Long_DA+1
 
@@ -747,9 +762,10 @@ EndMod
 Module Mon_Set_Register
 ***********************
 
+         JSR  Get_LAC           ; get 1st. parameter
          JSR  LAC_To_PC
          LDY  #3
-_loop    JSR  Got_LAC
+_loop    JSR  Get_LAC
          BCS  _exit
          LDA  Long_AC
          STA  Bank,Y
@@ -763,14 +779,13 @@ EndMod
 Module Mon_Set_Memory
 *********************
 
+         JSR  Get_LAC           ; get 1st. parameter
          BCS  _exit
          JSR  LAC_To_LPC        ; Long_PC = row address
          LDZ  #0
-_loop    JSR  Got_LAC
-         BCC  _valid
-         CMP  #APOSTR           ; flag for character entry
-         BNE  _exit
-_valid   LDA  Long_AC
+_loop    JSR  Get_LAC
+         BCS  _exit
+         LDA  Long_AC
          BBS7 Long_PC+3,_banked ; trigger banked access
          NOP                    ; use STA  [Long_PC],Z
 _banked  STA  (Long_PC),Z
@@ -791,6 +806,7 @@ EndMod
 Module Mon_Go
 *************
 
+         JSR  Get_LAC           ; get 1st. parameter
          JSR  LAC_To_PC
          LDX  SPL
          TXS
@@ -801,6 +817,7 @@ EndMod
 Module Mon_JSR
 **************
 
+         JSR  Get_LAC           ; get 1st. parameter
          JSR  LAC_To_PC
          LDX  SPL
          TXS
@@ -895,7 +912,7 @@ Module Mon_Transfer
 
          JSR  Param_Range       ; Long_PC = source
          LBCS Mon_Error         ; Long_CT = count
-         JSR  Got_LAC           ; Long_AC = target
+         JSR  Get_LAC           ; Long_AC = target
          LBCS Mon_Error
 
          LDZ  #0
@@ -929,7 +946,7 @@ Module Mon_Compare
 
          JSR  Param_Range       ; Long_PC = source
          LBCS Mon_Error         ; Long_CT = count
-         JSR  Got_LAC           ; Long_AC = target
+         JSR  Get_LAC           ; Long_AC = target
          LBCS Mon_Error
          JSR  Print_CR
          LDZ  #0
@@ -966,11 +983,11 @@ _lpstr   STA  Mon_Data,Y
          BNE  _lpstr
          BRA  _hunt
 
-_bin     JSR  Get_LAC
+_bin     JSR  Got_LAC
 _lpbin   LDA  Long_AC
          STA  Mon_Data,Y
          INY
-         JSR  Got_LAC
+         JSR  Get_LAC
          BCS  _hunt
          CPY  #32               ;max. data length
          BNE  _lpbin
@@ -1034,15 +1051,15 @@ _copyfn  LDA  Buffer,X          ; copy filename
 _unit    STX  Buf_Index         ; update read position
          JSR  Get_Char
          BEQ  _do               ; no more parameter
-         JSR  Got_LAC
+         JSR  Get_LAC
          BCS  _do
          LDA  Long_AC           ; unit #
          STA  FA
-         JSR  Got_LAC
+         JSR  Get_LAC
          BCS  _do
          JSR  LAC_To_LPC        ; Long_PC = start address
          STA  BA                ; Bank
-         JSR  Got_LAC           ; Long_AC = end address + 1
+         JSR  Get_LAC           ; Long_AC = end address + 1
          BCS  _load             ; no end address -> load/verify
          JSR  Print_CR
          LDX  Long_AC           ; X/Y = end address
@@ -1084,7 +1101,7 @@ Module Mon_Fill
 
          JSR  Param_Range       ; Long_PC = target
          LBCS Mon_Error         ; Long_CT = count
-         JSR  Got_LAC           ; Long_AC = fill byte
+         JSR  Get_LAC           ; Long_AC = fill byte
          LBCS Mon_Error
          JSR  Print_CR
          LDZ  #0
@@ -1100,6 +1117,7 @@ EndMod
 Module Mon_Assemble
 *******************
 
+         JSR  Get_LAC           ; get 1st. parameter
          LBCS Mon_Error
          JSR  LAC_To_LPC        ; Long_PC = PC
 
@@ -1205,13 +1223,7 @@ _labd    STA  Mode_Flags
          LDA  Long_AC+2
          LBNE Mon_Error         ; -> overflow
          LDY  #2                ; Y=2 word operand
-         LDA  Op_Bits
-         CMP  #8
-         BCC  _labe             ; -> binary: no 4 digit check
-         LDA  COL
-         CMP  #4                ; 4 digits force word operand
-         BEQ  _labf
-_labe    LDA  Long_AC+1
+         LDA  Long_AC+1
          BNE  _labf             ; high byte not zero
          DEY                    ; Y=1 byte operand
 _labf    LDX  Op_Ix             ; X = operand value #
@@ -1587,14 +1599,15 @@ EndMod
 Module Mon_Disassemble
 **********************
 
+         JSR  Get_LAC           ; get 1st. parameter
          BCS  _nopar
          JSR  LAC_To_LPC        ; Long_PC = start address
-         JSR  Got_LAC           ; Long_AC = end address
+         JSR  Get_LAC           ; Long_AC = end address
          BCC  range
 _nopar   LDA  #32               ; disassemble 32 bytes
-         STA  Long_AC
+         STA  Long_CT
          BRA  _loop
-range    JSR  LAC_Minus_LPC     ; Long_AC = range
+range    JSR  LAC_Minus_LPC     ; Long_CT = range
          LBCC Mon_Error         ; -> negative
 
 _loop    JSR  CR_Erase          ; prepare empty line
@@ -1604,10 +1617,10 @@ _loop    JSR  CR_Erase          ; prepare empty line
          INC  Op_Size
          LDA  Op_Size
          JSR  Add_LPC           ; advance address
-         LDA  Long_AC
+         LDA  Long_CT
          SEC
          SBC  Op_Size
-         STA  Long_AC
+         STA  Long_CT
          BCS  _loop
          JMP  Main
 EndMod
@@ -1704,17 +1717,17 @@ _long    LDA  #YELLOW
 _locate  LDX  Op_Code           ; X = opcode
          LDY  MNE_Index,X       ; Y = index to mnemonic text
          LDA  MNE_L,Y           ; A = packed left part
-         STA  Long_CT+1
+         STA  Long_AC+1
          LDA  MNE_R,Y           ; A = packed right part
-         STA  Long_CT
+         STA  Long_AC
 
 ;        unpack and print mnemonic text
 
          LDX  #3                ; 3 letters
 _lpmne   LDA  #0
          LDY  #5                ; 5 bits per letter
-_lplet   ASL  Long_CT
-         ROL  Long_CT+1
+_lplet   ASL  Long_AC
+         ROL  Long_AC+1
          ROL  A                 ; rotate letter into A
          DEY
          BNE  _lplet            ; next bit
@@ -1780,13 +1793,13 @@ _labb    JSR  CHROUT
 _labc    LDA  #'$'
          JSR  CHROUT
 
-;        fetch operand to Long_CT
+;        fetch operand to Long_AC
 
          LDY  #0
-         STY  Long_CT+1
+         STY  Long_AC+1
 _lpfop   INY
          JSR  Fetch
-         STA  Long_CT-1,Y
+         STA  Long_AC-1,Y
          CPY  Op_Size
          BCC  _lpfop
 
@@ -1800,7 +1813,7 @@ _lpfop   INY
 ;        print 16 bit operand hi/lo or 8 bit operand
 
          BBR5 Op_Flag,_proper
-         LDA  Long_CT+1
+         LDA  Long_AC+1
          JSR  Print_Hex         ; [$nn],Z
          LDA  #']'
          JSR  CHROUT
@@ -1809,7 +1822,7 @@ _lpfop   INY
 _proper  LDY  Op_Size
          BBR7 Op_Flag,_lpoper
          LDY  #1
-_lpoper  LDA  Long_CT-1,Y
+_lpoper  LDA  Long_AC-1,Y
          JSR  Print_Hex
          DEY
          BNE  _lpoper
@@ -1852,9 +1865,9 @@ _labg    BBR7 Op_Flag,_return
          JSR  CHROUT
          LDY  #2
          JSR  Fetch
-         STA  Long_CT
+         STA  Long_AC
          LDA  #0
-         STA  Long_CT+1
+         STA  Long_AC+1
          DEY
          STY  Op_Size           ; Op_Size = 1
          LDA  #3                ; offset for relative address
@@ -1865,21 +1878,21 @@ _rela    PHA
          LDA  Op_Size           ; 1:short   2:long
          LSR  A
          ROR  A
-         AND  Long_CT
+         AND  Long_AC
          BPL  _labh
          LDA  #$ff              ; backward branch
-         STA  Long_CT+1
+         STA  Long_AC+1
 
 _labh    PLX                    ; offset 2 or 3
-_lpinw   INW  Long_CT
+_lpinw   INW  Long_AC
          DEX
          BNE  _lpinw
 
          CLC
-         LDA  Long_CT
+         LDA  Long_AC
          ADC  Long_PC
          PHA
-         LDA  Long_CT+1
+         LDA  Long_AC+1
          ADC  Long_PC+1
          TAX
          PLA
@@ -1890,42 +1903,32 @@ _return  RTS
 EndMod
 
 **************
-Module Get_LAC
+Module Got_LAC
 **************
 
          DEC  Buf_Index
 EndMod
 
 **************
-Module Got_LAC
+Module Get_LAC
 **************
 
-         PHY                    ; save Y
-         PHZ                    ; save Z
          JSR  Read_Number
-         BCS  _error
-         LDA  COL
-         CMP  #39
-         BEQ  _noval
-         JSR  Got_Char
-         BNE  _delim
-         DEC  Buf_Index
-         LDA  COL
-         BEQ  _noval
-         BRA  _ok
-
-_delim   CMP  #' '
+         BCS  _error            ; illegal character
+         BEQ  _noval            ; no value
+         JSR  Got_Char          ; delimiter ?
+         BEQ  _end              ; end of input
+         CMP  #' '
          BEQ  _ok
          CMP  #','
          BEQ  _ok
 _error   JMP  Mon_Error         ; stack is reset in Mon_Error
 
 _noval   SEC
-         BRA  _return
+         RTS
+
+_end     DEC  Buf_Index
 _ok      CLC
-_return  PLZ
-         PLY
-         LDA  COL
          RTS
 EndMod
 
@@ -1935,49 +1938,35 @@ Module Read_Number
 
          PHX
          PHY
+         PHZ
          LDA  #0
-         STA  COL               ; count columns read
+         STA  Dig_Cnt               ; count columns read
+         STA  Long_AC           ; clear result Long_AC
+         STA  Long_AC+1
+         STA  Long_AC+2
+         STA  Long_AC+3
 
-         LDX  #3                ; clear result Long_AC
-_clear   STA  Long_AC,X
-         DEX
-         BPL  _clear
+         JSR  Get_Glyph         ; get 1st. character
+         BEQ  _exit
+         CMP  #APOSTR           ; character entry 'C
+         BNE  _numeric
+         JSR  Get_Char          ; character after '
+         STA  Long_AC
+         INC  Dig_Cnt
+         BRA  _exit
 
-_next    JSR  Get_Char          ; get 1st. character
-         LBEQ _exit             ; -> empty input (COL = 0)
-         CMP  #' '
-         BEQ  _next             ; skip leading blanks
-
-         LDY  #3                ; $ + % %
+_numeric LDY  #3                ; $ + % %
 _prefix  CMP  Cons_Prefix,Y     ; Y = base index
-         BEQ  _base             ; -> valid prefix
+         BEQ  _digit            ; -> valid prefix
          DEY
          BPL  _prefix
+         INY                    ; Y = 0
+         DEC  Buf_Index         ; character is digit
 
-         CMP  #$27              ; check for apostrophe
-         BNE  _defhex           ; -> no prefix
-         STA  COL               ; remember ' input
-         LDX  Buf_Index
-         LDA  Buffer,X
-         BNE  _char
-         LDA  #' '              ; default
-         DEC  Buf_Index
-_char    INC  Buf_Index
-         INC  Buf_Index
-         STA  Long_AC
-         LDY  #2
-         STY  Op_Bits
-         JMP  _exit
-
-_defhex  INY                    ; Y = 0
-         DEC  Buf_Index
-_base    LDA  Num_Bits,Y
-         STA  Op_Bits
-
-_digit   JSR  Get_Char
+_digit   JSR  Get_Char          ; hex -> BCD
          BEQ  _exit             ; ? : ; and zero terminate
          CMP  #'0'
-         BCC  _exit             ; NaN
+         BCC  _exit
          CMP  #':'
          BCC  _valid            ; 0-9
          CMP  #'A'
@@ -1988,13 +1977,20 @@ _digit   JSR  Get_Char
 _valid   SBC  #'0'-1
          CMP  Num_Base,Y
          BCS  _error
-         TAZ                    ; binary digit
-         INC  COL
+         PHA                    ; push digit
+         INC  Dig_Cnt
+
          CPY  #1                ; decimal
          BNE  _laba
+         LDX  #3                ; push Long_AC * 2
+         CLC
+_push    LDA  Long_AC,X
+         ROL  A
+         PHA
+         DEX
+         BPL  _push
 
-         JSR  LAC_To_LDA
-_laba    LDX  Op_Bits
+_laba    LDX  Num_Bits,Y
 _shift   ASL  Long_AC
          ROL  Long_AC+1
          ROW  Long_AC+2
@@ -2004,44 +2000,33 @@ _shift   ASL  Long_AC
 
          CPY  #1                ; decimal adjustment
          BNE  _labc
+         LDX  #0
+         LDZ  #3
          CLC
-         ROW  Long_DA
-         ROW  Long_DA+2
-         BCS  _error
-         LDA  Long_DA              ; Long_AC = digit * 8
-         ADC  Long_AC              ; Long_DA = digit * 2
-         STA  Long_AC
-         LDA  Long_DA+1
-         ADC  Long_AC+1
-         STA  Long_AC+1
-         LDA  Long_DA+2
-         ADC  Long_AC+2
-         STA  Long_AC+2
-         LDA  Long_DA+3
-         ADC  Long_AC+3
-         STA  Long_AC+3
-         BCS  _error
+_pull    PLA
+         ADC  Long_AC,X
+         STA  Long_AC,X
+         INX
+         DEZ
+         BPL  _pull
 
-_labc    CLC
-         TZA                    ; digit
+_labc    PLA                    ; pull digit
+         CLC
          ADC  Long_AC
          STA  Long_AC
-         TXA                    ; X = 0
-         ADC  Long_AC+1
-         STA  Long_AC+1
-         TXA
-         ADC  Long_AC+2
-         STA  Long_AC+2
-         TXA
-         ADC  Long_AC+3
-         STA  Long_AC+3
          BCC  _digit
+         INC  Long_AC+1
+         BNE  _digit
+         INW  Long_AC+2
+         BNE  _digit
+
 _error   SEC
          BRA  _return
 _exit    CLC
-_return  PLY
+_return  PLZ
+         PLY
          PLX
-         LDA  COL               ; # of digits
+         LDA  Dig_Cnt           ; digits read
          RTS
 EndMod
 
@@ -2142,6 +2127,18 @@ _lab     ADC  #'0'
          RTS
 EndMod
 
+****************
+Module Get_Glyph
+****************
+         PHX
+         LDA  #' '
+_loop    LDX  Buf_Index
+         INC  Buf_Index
+         CMP  Buffer,X
+         BEQ  _loop
+         PLX                    ; fall through
+EndMod
+
 ***************
 Module Got_Char
 ***************
@@ -2170,17 +2167,6 @@ _regc    CMP  #0
 _return  RTS
 EndMod
 
-**************
-Module Dec_LDA
-**************
-
-         LDA  Long_DA
-         ORA  Long_DA+1
-         BNE  _skip
-         DEW  Long_DA+2
-_skip    DEW  Long_DA
-         RTS
-EndMod
 
 **************
 Module Dec_LCT
@@ -2220,13 +2206,13 @@ Module Param_Range
 
 ; carry on exit flags error
 
+         JSR  Get_LAC           ; get 1st. parameter
          BCS  _error
-         JSR  LAC_To_LPC
-         JSR  Got_LAC
+         JSR  LAC_To_LPC        ; Long_PC = 1st. address
+         JSR  Get_LAC
          BCS  _error
-         JSR  LAC_To_LDA
-         JSR  LAC_Minus_LPC
-         JSR  LAC_To_LCT
+         JSR  LAC_To_LDA        ; Long_DA = 2nd. address
+         JSR  LAC_Minus_LPC     ; Long_CT = range
          BCC  _error
          CLC
          RTS
@@ -2240,7 +2226,8 @@ Module Converter
 
          LDX  #0
          STX  Buf_Index
-         JSR  Got_LAC
+         JSR  Get_LAC
+         LBCS Mon_Error
          LDX  #0
 _loop    PHX
          JSR  CR_Erase
@@ -2385,83 +2372,83 @@ EndMod
 Module Mon_Disk
 ***************
 
-         LDX  #1
-         LDA  Buffer,X
-         CMP  #'$'
-         BEQ  _laba
-
-; calculate length of string
-
+         DEC  Buf_Index
          LDX  Buf_Index
          LDA  Buffer,X
-_laba    STA  Long_CT
-         PHX
-         LDA  #-1
-
-_loopa   INC  A
+         STA  Long_CT           ; dir marker
+         LDY  #$ff              ; SA = 15
+         CMP  #'$'
+         BNE  _lab
+         LDY  #$f0              ; SA =  0
+_lab     LDA  FA
+         JSR  LISTEN
+         TYA                    ; SA
+         JSR  SECOND
+_loop    LDA  Buffer,X
+         BEQ  _close
+         JSR  CIOUT
          INX
-         LDY  Buffer-1,X
-         BNE  _loopa
-
-         PLX                    ; address low
-         LDY  #>Buffer          ; address high
-         JSR  SETNAM
-
-         LDY  #15               ; SA = command
+         BRA  _loop
+_close   JSR  UNLSN
          LDA  Long_CT
          CMP  #'$'
-         BNE  _nodir
-         LDY  #$60              ; SA = directory
-_nodir   LDA  #0                ; lfn for PRG reading
-         LDX  Long_AC              ; device
-         JSR  SETLFS
-         JSR  OPEN
-         BCS  _return
-         JSR  CLRCHN
-         JSR  Print_CR
-         LDX  #0
-         JSR  CHKIN
-         BCS  _return
-         LDA  Long_CT
-         CMP  #'$'
-         CLC
-_return  RTS
+         BEQ  Directory
 EndMod
+
+************************
+Module Print_Disk_Status
+************************
+
+         JSR  Print_CR
+         LDA  FA
+         JSR  TALK
+         LDA  #$6f
+         STA  SA
+         JSR  TKSA
+_loop    JSR  ACPTR
+         CMP  #' '
+         BCC  _exit
+         JSR  CHROUT
+         BRA  _loop
+_exit    JSR  UNTALK
+         JMP  Print_CR
+EndMod
+
+; @[u] : print disk status for unit u
+; @[u],$[=pattern] : print directory
+; @[u],command : send disk command and read status
+; @[u],U1 mem track startsec [endsec] : read  disk sector(s)
+; @[u],U2 mem track startsec [endsec] : write disk sector(s)
 
 **************
 Module Mon_DOS
 **************
 
-         BNE  _device
          LDX  #8                ; default device
-         STX  Long_AC
-_device  LDX  Long_AC              ; device
-
+         JSR  Get_Glyph
+         CMP  #'0'
+         BCC  _unit
+         CMP  #':'
+         BCS  _unit
+         DEC  Buf_Index
+         JSR  Read_Number
+         BCS  _unit
+         LDX  Long_AC           ; unit
          CPX  #4
          LBCC Mon_Error
          CPX  #31
          LBCS Mon_Error
-
-         JSR  Mon_Disk
-         BCS  DOS_Exit
-         BEQ  Directory
-
-_loop    JSR  CHRIN
-         JSR  CHROUT
-         LDX  STATUS
-         BNE  DOS_Exit
+_unit    STX  FA
+         DEC  Buf_Index
+_next    JSR  Get_Char
+         BEQ  _status           ; only @u
          CMP  #' '
-         BCS  _loop
-EndMod
-
-***************
-Module DOS_Exit
-***************
-
-         JSR  CLRCHN
-         LDA  #0                ; lfn
-         SEC                    ; special CLOSE
-         JSR  CLOSE
+         BEQ  _next
+         CMP  #','
+         BEQ  _next
+         CMP  #'U'              ; sector read/write
+         BEQ  DOS_U
+_status  JSR  Mon_Disk
          JMP  Main
 EndMod
 
@@ -2469,32 +2456,194 @@ EndMod
 Module Directory
 ****************
 
+         LDA  FA
+         JSR  TALK
+         LDA  #$60
+         STA  SA
+         JSR  TKSA
+         LDA  #0
+         STA  STATUS
+
          LDZ  #6                ; load address, pseudo link, pseudo number
 _loopb   TAX                    ; X = previous byte
-         JSR  CHRIN             ; A = current  byte
+         JSR  ACPTR             ; A = current  byte
          LDY  STATUS
-         BNE  DOS_Exit
+         BNE  _exit
          DEZ
          BNE  _loopb            ; X/A = last read word
 
          STX  Long_AC
          STA  Long_AC+1
+         STZ  Long_AC+2
+         STZ  Long_AC+3
          JSR  Print_Decimal     ; file size
          JSR  Print_Blank
 
-_loopc   JSR  CHRIN             ; print file entry
+_loopc   JSR  ACPTR             ; print file entry
          BEQ  _cr
          LDY  STATUS
-         BNE  DOS_Exit
+         BNE  _exit
          JSR  CHROUT
          BCC  _loopc
 
 _cr      JSR  Print_CR
          JSR  STOP
-         BEQ  DOS_Exit
+         BEQ  _exit
          LDZ  #4
          BRA  _loopb            ; next file
+_exit    JMP  UNTALK
 EndMod
+
+************
+Module DOS_U
+************
+
+         JSR  Get_Char        ; 1:read   2:write
+         STA  Mon_Data+1
+         INC  Buf_Index
+         JSR  Get_LAC
+         LBCS Mon_Error
+         JSR  LAC_To_LPC      ; Long_PC = memory address
+
+         JSR  Get_LAC
+         LBCS Mon_Error
+         LDA  Long_AC
+         STA  Disk_Track
+
+         JSR  Get_LAC
+         LBCS Mon_Error
+         LDA  Long_AC
+         STA  Disk_Sector
+         STA  Last_Sector       ; default: 1 sector
+
+         JSR  Get_LAC
+         BCS  _nolast
+         LDA  Long_AC
+         STA  Last_Sector
+
+_nolast  JSR  Build_U_String
+         JSR  Open_Disk_Buffer
+         JSR  Send_Disk_Command
+         JSR  Read_Sector
+         JSR  Close_Disk_Buffer
+         JMP  Main
+EndMod
+
+************************
+Module Send_Disk_Command
+************************
+
+         LDA  FA
+         JSR  LISTEN
+         LDA  #$ff
+         JSR  SECOND
+         LDY  #0
+         STY  STATUS
+_send    LDA  Mon_Data,Y
+         BEQ  _end
+         JSR  CIOUT
+         INY
+         BRA  _send
+_end     JMP  UNLSN
+EndMod
+
+******************
+Module Read_Sector
+******************
+
+         LDA  FA
+         JSR  TALK
+         LDA  #$69              ; SA = 9
+         JSR  TKSA
+         LDZ  #0
+         STZ  STATUS
+_loop    JSR  ACPTR
+         STA  [Long_PC],Z
+         INZ
+         BNE  _loop
+         JMP  UNTALK
+EndMod
+
+*************
+Module Set_TS
+*************
+
+; Input  A = track or sector
+;        X = string index
+
+_100      CMP  #100
+          BCC  _10
+          INC  Mon_Data,X
+          SBC  #100
+          BRA  _100
+_10       CMP  #10
+          BCC  _1
+          INC  Mon_Data+1,X
+          SBC  #10
+          BRA  _10
+_1        ORA  #'0'
+          STA  Mon_Data+2,X
+          RTS
+EndMod
+
+; @[u],U1 mem track startsec [endsec] : read  disk sector(s)
+
+; U1:CHANNEL DRIVE TRACK SECTOR
+
+*********************
+Module Build_U_String
+*********************
+
+         LDX #14
+_loop    LDA U1,X
+         STA Mon_Data,X
+         DEX
+         BPL _loop
+
+         LDA  Disk_Track
+         LDX  #7
+         JSR  Set_TS
+         LDA  Disk_Sector
+         LDX  #11
+         JMP  Set_TS
+EndMod
+
+***********************
+Module Open_Disk_Buffer
+***********************
+
+         LDA  #0
+         STA  STATUS
+         LDA  FA
+         JSR  LISTEN          ; open fa,9,"#"
+         LDA  #$f9            ; sa = 9
+         JSR  SECOND
+         LDA  #'#'            ; open buffer
+         JSR  CIOUT
+         JSR  UNLSN
+         LDA  STATUS
+         BEQ  _return
+         JMP  Print_Disk_Status
+_return  RTS
+EndMod
+
+************************
+Module Close_Disk_Buffer
+************************
+
+         LDA  #0
+         STA  STATUS
+         LDA  FA
+         JSR  LISTEN          ; open fa,9,"#"
+         LDA  #$e9            ; sa = 9
+         JSR  SECOND
+         JSR  UNLSN
+         LDA  STATUS
+         BEQ  _return
+         JMP  Print_Disk_Status
+_return  RTS
+EndMod
+
 
 ; The 3 letter mnemonics are encoded as three 5-bit values
 ; and stored in a left byte MNE_L and a right byte MNE_R
@@ -2508,8 +2657,8 @@ EndMod
 ;           00100
 ;                0
 ;
-; The operator >" stores the right byte of the packed value
-; The operator <" stores the left  byte of the packed value
+; The operator >" stores the left (high) byte of the packed value
+; The operator <" stores the right (low) byte of the packed value
 
 *****
 MNE_L
@@ -2846,6 +2995,9 @@ Num_Bits .BYTE  4, 3, 3, 1 ; hex, dec, oct, bin
 
 Index_Char .BYTE "XYZ"
 
+;                0123456789abcd
+U1        .BYTE "U1:9 0 000 000",0 ; channel 9, drive, track, sector
+
 ***************
 Module Reg_Text
 ***************
@@ -2860,6 +3012,7 @@ Module Mon_Help
    JSR PRIMM
 
    .BYTE LRED,"A",WHITE,"SSEMBLE     - A ADDRESS MNEMONIC OPERAND",CR
+   .BYTE LRED,"B",WHITE,"ITMAPS      - B [FROM [TO]]",CR
    .BYTE LRED,"C",WHITE,"OMPARE      - C FROM TO WITH",CR
    .BYTE LRED,"D",WHITE,"ISASSEMBLE  - D [FROM [TO]]",CR
    .BYTE LRED,"F",WHITE,"ILL         - F FROM TO FILLBYTE",CR
