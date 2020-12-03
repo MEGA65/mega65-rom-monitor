@@ -7,7 +7,29 @@ Bit Shifter's Monitor for the MEGA65.
 
 This monitor is an open source replacement for the C65 monitor.
 
-It supports many features of the 45GS02 CPU and the linear address modes,
+You can either load the monitor from disk(image) or patch it into the C65 ROM.
+
+Load
+====
+```
+1) select disk image with "BSM", e.g. bsmon.d81 from this repository.
+2) DLOAD "BSM"
+3) RUN
+```
+
+Patch
+=====
+```
+1) download "911001.mon" from this repository
+2) rename current file on SD-card from "MEGA65.ROM" to "MEGA65.OLD"
+3) rename "911001.mon" to "MEGA65.ROM"
+```
+
+The "Load" method is temporary.
+
+The "Patch" method is permanent (you can go back by renaming again).
+
+The new monitor supports many features of the 45GS02 CPU and the linear address modes,
 which enables access to the full 28 bit space of ROM, RAM and I/O.
 
 A full documentation is in progress as chapter in the MEGA65 User's Guide.
