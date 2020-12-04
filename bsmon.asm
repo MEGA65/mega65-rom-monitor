@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  03-Dec_2020 *
+* for The MEGA65  04-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -174,7 +174,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 03-DEC-20",0
+        .BYTE " BIT SHIFTER 04-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -2375,6 +2375,7 @@ Module Mon_Disk
          DEC  Buf_Index
          LDX  Buf_Index
          LDA  Buffer,X
+         BEQ  Print_Disk_Status
          STA  Long_CT           ; dir marker
          LDY  #$ff              ; SA = 15
          CMP  #'$'
@@ -2392,7 +2393,46 @@ _loop    LDA  Buffer,X
 _close   JSR  UNLSN
          LDA  Long_CT
          CMP  #'$'
-         BEQ  Directory
+         BNE  Check_Disk_Status
+         JMP  Directory
+
+EndMod
+
+*************************
+Module Open_Error_Channel
+*************************
+
+         JSR  Print_CR
+         LDA  FA
+         JSR  TALK
+         LDA  #$6f
+         STA  SA
+         JMP  TKSA
+EndMod
+
+************************
+Module Check_Disk_Status
+************************
+
+         JSR  Open_Error_Channel
+         JSR  ACPTR
+         CMP  #'0'
+         BNE  _print
+         JSR  ACPTR
+         CMP  #'0'
+         BEQ  _exit
+         PHA
+         LDA  #'0'
+         JSR  CHROUT
+         PLA
+_print   JSR  CHROUT
+_loop    JSR  ACPTR
+         CMP  #' '
+         BCC  _exit
+         JSR  CHROUT
+         BRA  _loop
+_exit    JSR  UNTALK
+         JMP  Print_CR
 EndMod
 
 ************************
@@ -2400,11 +2440,7 @@ Module Print_Disk_Status
 ************************
 
          JSR  Print_CR
-         LDA  FA
-         JSR  TALK
-         LDA  #$6f
-         STA  SA
-         JSR  TKSA
+         JSR  Open_Error_Channel
 _loop    JSR  ACPTR
          CMP  #' '
          BCC  _exit
@@ -2498,8 +2534,12 @@ EndMod
 Module DOS_U
 ************
 
-         JSR  Get_Char        ; 1:read   2:write
-         STA  Mon_Data+1
+         JSR  Get_Char
+         CMP  #'1'            ; U1: read
+         LBCC Mon_Error
+         CMP  #'3'            ; U2: write
+         LBCS Mon_Error
+         PHA                  ; push U type
          INC  Buf_Index
          JSR  Get_LAC
          LBCS Mon_Error
@@ -2523,15 +2563,22 @@ Module DOS_U
 
 _nolast  JSR  Build_U_String
          JSR  Open_Disk_Buffer
+         PLA                    ; pull U type
+         STA  Mon_Data+1
+         CMP  #'2'
+         BEQ  _write
          JSR  Send_Disk_Command
          JSR  Read_Sector
-         JSR  Close_Disk_Buffer
+         BRA  _exit
+_write   JSR  Write_Sector
+         JSR  Send_Disk_Command
+_exit    JSR  Close_Disk_Buffer
          JMP  Main
 EndMod
 
-************************
-Module Send_Disk_Command
-************************
+***************************
+Module Open_Command_Channel
+***************************
 
          LDA  FA
          JSR  LISTEN
@@ -2539,12 +2586,33 @@ Module Send_Disk_Command
          JSR  SECOND
          LDY  #0
          STY  STATUS
-_send    LDA  Mon_Data,Y
+         RTS
+EndMod
+
+***************
+Module Reset_BP
+***************
+
+         JSR  Open_Command_Channel
+_loop    LDA  BP_ZERO,Y
          BEQ  _end
          JSR  CIOUT
          INY
-         BRA  _send
+         BRA  _loop
 _end     JMP  UNLSN
+EndMod
+
+************************
+Module Send_Disk_Command
+************************
+
+         JSR  Open_Command_Channel
+_loop    LDA  Mon_Data,Y
+         BEQ  _end
+         JSR  CIOUT
+         INY
+         BRA  _loop
+_end     JSR  UNLSN
 EndMod
 
 ******************
@@ -2562,6 +2630,25 @@ _loop    JSR  ACPTR
          INZ
          BNE  _loop
          JMP  UNTALK
+EndMod
+
+******************
+Module Write_Sector
+******************
+
+         JSR  Reset_BP          ; reset disk buffer pointer
+         LDA  FA
+         JSR  LISTEN
+         LDA  #$69              ; SA = 9
+         JSR  TKSA
+         LDZ  #0
+         STZ  STATUS
+_loop    LDA  [Long_PC],Z
+         JSR  CIOUT
+         INZ
+         BNE  _loop
+         JSR  UNLSN
+         RTS
 EndMod
 
 *************
@@ -2997,6 +3084,7 @@ Index_Char .BYTE "XYZ"
 
 ;                0123456789abcd
 U1        .BYTE "U1:9 0 000 000",0 ; channel 9, drive, track, sector
+BP_ZERO   .BYTE "B-P 9 0",0        ; set buffer pointer to 0
 
 ***************
 Module Reg_Text
