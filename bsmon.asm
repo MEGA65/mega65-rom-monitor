@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  04-Dec_2020 *
+* for The MEGA65  08-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -96,23 +96,21 @@ IIRQ       = $0314
 IBRK       = $0316
 EXMON      = $032e
 
+& = $400                ; bottom of BASIC runtime stack
+                        ; should be a safe space
+X_Vector    .BSS  2     ; exit vector (ROM version dependent)
+Ix_Mne      .BSS  1     ; index to mnemonics table
+Op_Mne      .BSS  3     ; 3 bytes for mnemonic
+Op_Ix       .BSS  1     ; type of constant
+Op_Len      .BSS  1     ; length of operand
+Disk_Unit   .BSS  1     ; unit = device
+Disk_Track  .BSS  1     ; logical track  1 -> 255
+Disk_Sector .BSS  1     ; logical sector 0 -> 255
+Disk_Status .BSS  1     ; BCD value of status
 
-Mon_Data   = $0400      ; 32 byte bufer for hunt and filename
-X_Vector   = $0420      ; exit vector (ROM version dependent)
+Mon_Data    .BSS 40     ; buffer for hunt and filename
+Disk_Msg    .BSS 40     ; disk status as text message
 
-Disk_RW    = $0422
-Disk_Unit  = $0423
-Disk_Drive = $0424
-Disk_Track = $0425
-Disk_Sector= $0426
-Last_Sector= $0427
-
-Op_Mne     = $0433      ; 3 bytes for mnemonic
-Op_Ix      = $0437      ; type of constant
-Ix_Mne     = $0438      ; index to mnemonics table
-Op_Len     = $0439      ; length of operand
-
-Unit       = $1106
 EXIT_OLD   = $cf2e      ; exit address for ROM 910110
 EXIT       = $cfa4      ; exit address for ROM 911001
 
@@ -174,7 +172,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 04-DEC-20",0
+        .BYTE " BIT SHIFTER 08-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -1015,7 +1013,7 @@ EndMod
 Module Load_Save
 ****************
 
-         LDY  Unit
+         LDY  Disk_Unit
          STY  FA
          LDY  #8
          STY  SA
@@ -2189,6 +2187,11 @@ Module Add_LPC
          ADC  Long_PC
          STA  Long_PC
          BCC  _return
+
+************
+Inc_LPC_Page
+************
+
          INC  Long_PC+1
          BNE  _return
          INW  Long_PC+2
@@ -2393,61 +2396,63 @@ _loop    LDA  Buffer,X
 _close   JSR  UNLSN
          LDA  Long_CT
          CMP  #'$'
-         BNE  Check_Disk_Status
+         BNE  Print_Disk_Status
          JMP  Directory
 
 EndMod
 
-*************************
-Module Open_Error_Channel
-*************************
+**********************
+Module Get_Disk_Status
+**********************
 
-         JSR  Print_CR
          LDA  FA
          JSR  TALK
          LDA  #$6f
-         STA  SA
-         JMP  TKSA
-EndMod
+         JSR  TKSA
+         JSR  ACPTR             ; 1st. digit
+         STA  Disk_Msg
+         ASL  A
+         ASL  A
+         ASL  A
+         ASL  A
+         STA  Disk_Status       ; BCD
+         JSR  ACPTR             ; 2nd. digit
+         STA  Disk_Msg+1
+         AND  #15
+         ORA  Disk_Status
+         STA  Disk_Status       ; complete BCD number
 
-************************
-Module Check_Disk_Status
-************************
-
-         JSR  Open_Error_Channel
+         LDY  #1
+_loop    INY
          JSR  ACPTR
-         CMP  #'0'
-         BNE  _print
-         JSR  ACPTR
-         CMP  #'0'
-         BEQ  _exit
-         PHA
-         LDA  #'0'
-         JSR  CHROUT
-         PLA
-_print   JSR  CHROUT
-_loop    JSR  ACPTR
+         STA  Disk_Msg,Y
          CMP  #' '
-         BCC  _exit
-         JSR  CHROUT
-         BRA  _loop
-_exit    JSR  UNTALK
-         JMP  Print_CR
+         BCS  _loop
+         LDA  #0
+         STA  Disk_Msg,Y
+         JSR  UNTALK
+         LDA  Disk_Status
+         RTS
 EndMod
 
 ************************
 Module Print_Disk_Status
 ************************
 
+         JSR  Get_Disk_Status
+
+**************
+Print_Disk_Msg
+**************
+
          JSR  Print_CR
-         JSR  Open_Error_Channel
-_loop    JSR  ACPTR
-         CMP  #' '
-         BCC  _exit
+         LDY  #0
+_loop    LDA  Disk_Msg,Y
+         BEQ  _exit
          JSR  CHROUT
+         INY
          BRA  _loop
-_exit    JSR  UNTALK
-         JMP  Print_CR
+_exit    JMP  Print_CR
 EndMod
 
 ; @[u] : print disk status for unit u
@@ -2539,7 +2544,7 @@ Module DOS_U
          LBCC Mon_Error
          CMP  #'3'            ; U2: write
          LBCS Mon_Error
-         PHA                  ; push U type
+         STA  Mon_Data+1      ; U type
          INC  Buf_Index
          JSR  Get_LAC
          LBCS Mon_Error
@@ -2554,26 +2559,55 @@ Module DOS_U
          LBCS Mon_Error
          LDA  Long_AC
          STA  Disk_Sector
-         STA  Last_Sector       ; default: 1 sector
 
          JSR  Get_LAC
-         BCS  _nolast
-         LDA  Long_AC
-         STA  Last_Sector
+         JSR  LAC_To_LCT        ; Long_CT = sector count
+         DEW  Long_CT           ; Long_CT = -1 for single
 
-_nolast  JSR  Build_U_String
          JSR  Open_Disk_Buffer
-         PLA                    ; pull U type
-         STA  Mon_Data+1
-         CMP  #'2'
+
+_loop    LDA  Mon_Data+1
+         LSR  A
          BEQ  _write
-         JSR  Send_Disk_Command
+         JSR  Find_Next_Sector
+         BNE  _error
          JSR  Read_Sector
-         BRA  _exit
+         BRA  _next
+
 _write   JSR  Write_Sector
-         JSR  Send_Disk_Command
-_exit    JSR  Close_Disk_Buffer
+         JSR  Find_Next_Sector
+         BNE  _error
+
+_next    JSR  Inc_LPC_Page
+         INC  Disk_Sector
+         DEW  Long_CT
+         BPL  _loop
+
+_error   JSR  Print_Disk_Msg
+         JSR  Close_Disk_Buffer
          JMP  Main
+EndMod
+
+***********************
+Module Find_Next_Sector
+***********************
+
+         JSR  Build_U_String
+         JSR  Send_Disk_Command
+         JSR  Get_Disk_Status
+         BEQ  _return           ; OK
+         CMP  #$66              ; illegal track or sector
+         BNE  _error            ; error
+         LDA  #0
+         STA  Disk_Sector
+         INC  Disk_Track        ; try next track
+         JSR  Build_U_String
+         JSR  Send_Disk_Command
+         JSR  Get_Disk_Status
+         BEQ  _return
+_error   JSR  Print_Disk_Msg
+         LDA  Disk_Status
+_return  RTS
 EndMod
 
 ***************************
@@ -2612,7 +2646,7 @@ _loop    LDA  Mon_Data,Y
          JSR  CIOUT
          INY
          BRA  _loop
-_end     JSR  UNLSN
+_end     JMP  UNLSN
 EndMod
 
 ******************
@@ -2681,12 +2715,14 @@ EndMod
 Module Build_U_String
 *********************
 
-         LDX #14
-_loop    LDA U1,X
-         STA Mon_Data,X
+         LDX  #14
+_loop    LDA  U1,X
+         STA  Mon_Data,X
          DEX
-         BPL _loop
-
+         CPX  #2
+         BCS  _loop
+         LDA  #'U'
+         STA  Mon_Data
          LDA  Disk_Track
          LDX  #7
          JSR  Set_TS
@@ -2709,9 +2745,8 @@ Module Open_Disk_Buffer
          JSR  CIOUT
          JSR  UNLSN
          LDA  STATUS
-         BEQ  _return
-         JMP  Print_Disk_Status
-_return  RTS
+         LBNE Print_Disk_Status
+         RTS
 EndMod
 
 ************************
@@ -2726,9 +2761,8 @@ Module Close_Disk_Buffer
          JSR  SECOND
          JSR  UNLSN
          LDA  STATUS
-         BEQ  _return
-         JMP  Print_Disk_Status
-_return  RTS
+         LBNE Print_Disk_Status
+         RTS
 EndMod
 
 

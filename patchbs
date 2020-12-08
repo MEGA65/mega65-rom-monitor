@@ -3,7 +3,3 @@
 dd if=910111.bin of=parta bs=8k count=8
 dd if=910111.bin of=partc bs=8k skip=9 count=7
 cat >910111.mon parta bsmon.rom partc
-
-dd if=911001.bin of=parta bs=8k count=8
-dd if=911001.bin of=partc bs=8k skip=9 count=7
-cat >911001.mon parta bsmon.rom partc
