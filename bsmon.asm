@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  08-Dec_2020 *
+* for The MEGA65  10-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -63,7 +63,10 @@ Long_DA    .BSS 4  ; 32 bit data pointer
 Adr_Flags  .BSS 1
 Mode_Flags .BSS 1
 Op_Code    .BSS 1
-Op_Flag    .BSS 1
+Op_Flag    .BSS 1  ; 7: two operands
+                   ; 6: long branch
+                   ; 5: 32 bit address
+                   ; 4: Q register
 Op_Size    .BSS 1
 Dig_Cnt    .BSS 1
 Buf_Index  .BSS 1
@@ -172,7 +175,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 08-DEC-20",0
+        .BYTE " BIT SHIFTER 10-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -1638,18 +1641,31 @@ Module Print_Code
 ;        print 24 bit address of instruction
 
          JSR  Hex_LPC          ; 24 bit address
-         JSR  Print_Blank
 
 ;        read opcode and calculate length and address mode
 
          LDY  #0
          STY  Op_Flag           ; clear flags
          JSR  Fetch             ; fetch from (banked) address
-         STA  Op_Code           ; store it
-         TAX                    ; save in X
+
+;        check for Q instructions
+
+         CMP  #$42              ; NEG
+         BNE  _nop
+         INY                    ; Y = 1
+         JSR  Fetch
+         CMP  #$42              ; NEG
+         BNE  _nop
+         SMB4 Op_Flag           ; Q flag
+         LDA  #2
+         JSR  Add_LPC           ; skip NEG NEG
 
 ;        check for 32 bit address mode
 
+_nop     LDY  #0
+         JSR  Fetch
+         STA  Op_Code
+         TAX
          CMP  #$ea              ; prefix ?
          BNE  _normal
          INY
@@ -1681,6 +1697,10 @@ _norm1
 ;        print instruction and operand bytes
 
          LDY  #0
+         LDA  #' '
+         BBR4 Op_Flag,_blpr
+         LDA  #'*'              ; print * for NEG NEG
+_blpr    JSR  CHROUT
 _lphex   JSR  Fetch
          JSR  Print_Hex_Blank
          CPY  #2
@@ -1729,12 +1749,31 @@ _lplet   ASL  Long_AC
          ROL  A                 ; rotate letter into A
          DEY
          BNE  _lplet            ; next bit
-
          ADC  #$3f              ; add offset (C = 0)
-         JSR  CHROUT            ; and print it
          DEX
-         BNE  _lpmne            ; next letter
+         BEQ  _lastc            ; 3rd. character
+         TAZ                    ; remember
+         JSR  CHROUT            ; and print it
+         BRA  _lpmne            ; next letter
 
+_lastc   BBR4 Op_Flag,_lbra     ; -> no Q
+         CMP  #'A'              ; LDA, STA, ORA
+         BEQ  _Q3
+         CMP  #'C'              ; DEC, INC
+         BNE  _Q4
+         CPZ  #'E'              ; DEC
+         BEQ  _Q3
+         CPZ  #'N'              ; INC
+         BNE  _Q4
+_Q3      LDA  #'Q'              ; LDQ, STQ, ORQ, INQ, DEQ
+         JSR  CHROUT
+         BRA  _mne4
+_Q4      JSR  CHROUT
+         LDA  #'Q'              ; add Q as 4th. char
+         JSR  CHROUT
+         BRA  _mne5
+
+_lbra    JSR  CHROUT            ; 3rd. character
          BBS6 Op_Flag,_mne5     ; long branch
 
 ;        check for 4-letter bit instructions
@@ -1772,7 +1811,9 @@ _lpaccu  DEX
          BNE  _lpaccu
 
          LDA  #'A'
-         JSR  CHROUT
+         BBR4 Op_Flag,_accu
+         LDA  #'Q'
+_accu    JSR  CHROUT
          JMP  _return
 
 ;        fetch and decode operand
@@ -1806,7 +1847,7 @@ _lpfop   INY
          LDX  Op_Code
          LDA  LEN_ADM,X
          AND  #%0010 0000       ; branches
-         BNE  _rel
+         LBNE _rel
 
 ;        print 16 bit operand hi/lo or 8 bit operand
 
@@ -1843,7 +1884,13 @@ _labe    BBR3 Adr_Flags,_labf   ; ) flag
          LDA  #')'
          JSR  CHROUT
 
-_labf    BBR2 Adr_Flags,_labg   ; , flag
+_labf    BBR4 Op_Flag,_comch    ; not a Q instruction
+         LDA  Adr_Flags
+         AND  #3
+         CMP  #1
+         BNE  _return           ; Q only with ,X
+
+_comch   BBR2 Adr_Flags,_labg   ; , flag
          LDA  #','
          JSR  CHROUT
 
