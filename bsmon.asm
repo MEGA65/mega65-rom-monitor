@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  10-Dec_2020 *
+* for The MEGA65  28-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -175,7 +175,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 10-DEC-20",0
+        .BYTE " BIT SHIFTER 28-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -924,16 +924,24 @@ Module Mon_Transfer
 
          JSR  LAC_Plus_LCT      ; Long_AC = end of target
 
-_lpback  LDA  [Long_DA],Z       ; backward copy
-         STA  [Long_AC],Z
+_lpback  BBS7 Long_DA+3,_rb     ; bit 31 ?
+         NOP                    ; LDA  [Long_DA],Z
+_rb      LDA  (Long_DA),Z       ; backward copy
+         BBS7 Long_AC+3,_wb     ; bit 31 ?
+         NOP                    ; STA  [Long_AC],Z
+_wb      STA  (Long_AC),Z
          JSR  Dec_LDA
          JSR  Dec_LAC
          JSR  Dec_LCT
          BPL  _lpback
          JMP  Main
 
-_forward LDA  [Long_PC],Z       ; forward copy
-         STA  [Long_AC],Z
+_forward BBS7 Long_PC+3,_rf     ; bit 31 ?
+         NOP                    ; LDA  [Long_PC],Z
+_rf      LDA  (Long_PC),Z       ; backward copy
+         BBS7 Long_AC+3,_wf     ; bit 31 ?
+         NOP                    ; STA  [Long_AC],Z
+_wf      STA  (Long_AC),Z
          JSR  Inc_LPC
          JSR  Inc_LAC
          JSR  Dec_LCT
@@ -951,8 +959,12 @@ Module Mon_Compare
          LBCS Mon_Error
          JSR  Print_CR
          LDZ  #0
-_loop    LDA  [Long_PC],Z
-         CMP  [Long_AC],Z
+_loop    BBS7 Long_PC+3,_rf     ; bit 31 ?
+         NOP                    ; LDA  [Long_PC],Z
+_rf      LDA  (Long_PC),Z       ; backward copy
+         BBS7 Long_AC+3,_cf     ; bit 31 ?
+         NOP                    ; CMP  [Long_AC],Z
+_cf      CMP  (Long_AC),Z
          BEQ  _laba
          JSR  Hex_LPC
 _laba    JSR  Inc_LAC
