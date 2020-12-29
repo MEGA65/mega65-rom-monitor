@@ -2304,7 +2304,7 @@ _loop    PHX
          JSR  (Conv_Tab,X)
          PLX
          INX
-         CPX  #4
+         CPX  #5
          BCC  _loop
          JMP  Main
 
@@ -2312,6 +2312,20 @@ Conv_Tab .WORD Print_Hexval
          .WORD Print_Decimal
          .WORD Print_Octal
          .WORD Print_Dual
+         .WORD Print_Char
+EndMod
+
+*****************
+Module Print_Char
+*****************
+
+         LDA  Long_AC
+         CMP  #' '
+         BCC  _return
+         CMP  #$60
+         BCS  _return
+         JMP  CHROUT
+_return  RTS
 EndMod
 
 *****************

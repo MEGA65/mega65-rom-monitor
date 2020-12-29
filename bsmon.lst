@@ -335,7 +335,7 @@ fff0          PLOT       = $fff0
               Module Mon_Register ; $6042
               ***************************
 
-606d 20 ec 71          JSR  Reg_Text
+606d 20 fc 71          JSR  Reg_Text
 
               ; print Bank,PCH
 
@@ -486,11 +486,11 @@ fff0          PLOT       = $fff0
 6135 6d 60             .WORD Mon_Register     ; R
 6137 44 63             .WORD Mon_Transfer     ; T
 6139 4f 61             .WORD Mon_Exit         ; X
-613b 05 6d             .WORD Mon_DOS          ; @
+613b 15 6d             .WORD Mon_DOS          ; @
 613d ec 64             .WORD Mon_Assemble     ; .
 613f 84 62             .WORD Mon_Set_Memory   ; >
 6141 6a 62             .WORD Mon_Set_Register ; ;
-6143 1f 72             .WORD Mon_Help         ; ?
+6143 2f 72             .WORD Mon_Help         ; ?
 6145 b1 6b             .WORD Converter        ; $
 6147 b1 6b             .WORD Converter        ; +
 6149 b1 6b             .WORD Converter        ; &
@@ -1184,9 +1184,9 @@ fff0          PLOT       = $fff0
 
 653c a2 5a             LDX  #90               ; # of mnemonics
 653e a5 65             LDA  Long_DA
-6540 dd f2 6e _lpfind  CMP  MNE_L,X           ; compare left MNE
+6540 dd 02 6f _lpfind  CMP  MNE_L,X           ; compare left MNE
 6543 d0 07             BNE  _nxfind
-6545 bc 4d 6f          LDY  MNE_R,X
+6545 bc 5d 6f          LDY  MNE_R,X
 6548 c4 66             CPY  Long_DA+1         ; compare right MNE
 654a f0 06             BEQ  _found
 654c ca       _nxfind  DEX
@@ -1199,7 +1199,7 @@ fff0          PLOT       = $fff0
 
 6555 8a                TXA
 6556 a2 00             LDX  #0
-6558 dd a8 6f _lpopc   CMP  MNE_Index,X
+6558 dd b8 6f _lpopc   CMP  MNE_Index,X
 655b f0 03             BEQ  _exopc
 655d e8                INX
 655e d0 f8             BNE  _lpopc
@@ -1419,7 +1419,7 @@ fff0          PLOT       = $fff0
 66d6 86 59             STX  Long_AC
 66d8 84 5a             STY  Long_AC+1            ; Aval = operand
 66da a2 0a             LDX  #10
-66dc dd a7 70 _lpbrain CMP  BRAIN-1,X
+66dc dd b7 70 _lpbrain CMP  BRAIN-1,X
 66df f0 05             BEQ  _branch
 66e1 ca                DEX
 66e2 d0 f8             BNE  _lpbrain
@@ -1564,14 +1564,14 @@ fff0          PLOT       = $fff0
 
 67ba a6 6b             LDX  Op_Code           ; try this opcode
 67bc a5 6a             LDA  Mode_Flags         ; size and address mode
-67be dd b2 70 _loop    CMP  LEN_ADM,X
+67be dd c2 70 _loop    CMP  LEN_ADM,X
 67c1 f0 0e             BEQ  _return           ; success  ZF=1
 
               ;        search for next opcode with same mnemonic
 
 67c3 e8       _next    INX                    ; next opcode
 67c4 f0 0a             BEQ _error
-67c6 bc a8 6f          LDY  MNE_Index,X
+67c6 bc b8 6f          LDY  MNE_Index,X
 67c9 cc 02 04          CPY  Ix_Mne            ; same mnemonic ?
 67cc f0 f0             BEQ  _loop             ; -> compare again
 67ce 80 f3             BRA  _next
@@ -1586,7 +1586,7 @@ fff0          PLOT       = $fff0
 
 67d2 a5 6a             LDA  Mode_Flags
 67d4 a2 00             LDX  #0
-67d6 dd b2 71 _loop    CMP  ADMODE,X
+67d6 dd c2 71 _loop    CMP  ADMODE,X
 67d9 f0 07             BEQ  _found
 67db e8                INX
 67dc e0 10             CPX  #16
@@ -1692,11 +1692,11 @@ fff0          PLOT       = $fff0
 6867 85 6b             STA  Op_Code           ; code after prefix
 6869 aa                TAX
 
-686a bc b2 70 _normal  LDY  LEN_ADM,X         ; Y = length and address mode
+686a bc c2 70 _normal  LDY  LEN_ADM,X         ; Y = length and address mode
 686d 98                TYA                    ; A = length and address mode
 686e 29 0f             AND  #15               ; A = address mode
 6870 aa                TAX                    ; X = address mode
-6871 bd b2 71          LDA  ADMODE,X          ; A = mode flags
+6871 bd c2 71          LDA  ADMODE,X          ; A = mode flags
 6874 85 69             STA  Adr_Flags         ; store
 6876 98                TYA                    ; A = length and address mode
 6877 29 c0             AND  #%1100 0000       ; mask instruction length
@@ -1737,7 +1737,7 @@ fff0          PLOT       = $fff0
 68ac a9 9e    _long    LDA  #YELLOW
 68ae 20 d2 ff          JSR  CHROUT
 68b1 a6 6b             LDX  Op_Code
-68b3 bd b2 70          LDA  LEN_ADM,X
+68b3 bd c2 70          LDA  LEN_ADM,X
 68b6 c9 a0             CMP  #%1010 0000        ; long branch mode
 68b8 d0 07             BNE  _locate
 68ba e7 6c             SMB6 Op_Flag            ; set long branch flag
@@ -1747,10 +1747,10 @@ fff0          PLOT       = $fff0
               ;        locate mnemonic text
 
 68c1 a6 6b    _locate  LDX  Op_Code           ; X = opcode
-68c3 bc a8 6f          LDY  MNE_Index,X       ; Y = index to mnemonic text
-68c6 b9 f2 6e          LDA  MNE_L,Y           ; A = packed left part
+68c3 bc b8 6f          LDY  MNE_Index,X       ; Y = index to mnemonic text
+68c6 b9 02 6f          LDA  MNE_L,Y           ; A = packed left part
 68c9 85 5a             STA  Long_AC+1
-68cb b9 4d 6f          LDA  MNE_R,Y           ; A = packed right part
+68cb b9 5d 6f          LDA  MNE_R,Y           ; A = packed right part
 68ce 85 59             STA  Long_AC
 
               ;        unpack and print mnemonic text
@@ -1821,7 +1821,7 @@ fff0          PLOT       = $fff0
 693e a2 08             LDX  #8
 6940 ca       _lpaccu  DEX
 6941 30 12             BMI  _oper
-6943 dd c2 71          CMP  ACCUMODE,X
+6943 dd d2 71          CMP  ACCUMODE,X
 6946 d0 f8             BNE  _lpaccu
 
 6948 a9 41             LDA  #'A'
@@ -1859,7 +1859,7 @@ fff0          PLOT       = $fff0
               ;        interpret address modes
 
 6982 a6 6b             LDX  Op_Code
-6984 bd b2 70          LDA  LEN_ADM,X
+6984 bd c2 70          LDA  LEN_ADM,X
 6987 29 20             AND  #%0010 0000       ; branches
 6989 d3 84 00          LBNE _rel
 
@@ -1912,7 +1912,7 @@ fff0          PLOT       = $fff0
 69e5 29 03             AND  #%0000 0011 ; $03
 69e7 f0 07             BEQ  _labg
 69e9 a8                TAY
-69ea b9 d1 71          LDA  Index_Char-1,Y
+69ea b9 e1 71          LDA  Index_Char-1,Y
 69ed 20 d2 ff          JSR  CHROUT
 
               ;        fetch 2nd. operand for BBR and BBS
@@ -2035,7 +2035,7 @@ fff0          PLOT       = $fff0
 6a9b b0 4e             BCS  _exit
 6a9d e9 07             SBC  #7                ; hex conversion
 6a9f e9 2f    _valid   SBC  #'0'-1
-6aa1 d9 ca 71          CMP  Num_Base,Y
+6aa1 d9 da 71          CMP  Num_Base,Y
 6aa4 b0 42             BCS  _error
 6aa6 48                PHA                    ; push digit
 6aa7 e6 6e             INC  Dig_Cnt
@@ -2050,7 +2050,7 @@ fff0          PLOT       = $fff0
 6ab4 ca                DEX
 6ab5 10 f9             BPL  _push
 
-6ab7 be ce 71 _laba    LDX  Num_Bits,Y
+6ab7 be de 71 _laba    LDX  Num_Bits,Y
 6aba 06 59    _shift   ASL  Long_AC
 6abc 26 5a             ROL  Long_AC+1
 6abe eb 5b 00          ROW  Long_AC+2
@@ -2304,66 +2304,80 @@ fff0          PLOT       = $fff0
 6bca 23 d6 6b          JSR  (Conv_Tab,X)
 6bcd fa                PLX
 6bce e8                INX
-6bcf e0 04             CPX  #4
+6bcf e0 05             CPX  #5
 6bd1 90 ea             BCC  _loop
 6bd3 4c a5 60          JMP  Main
 
-6bd6 13 6c    Conv_Tab .WORD Print_Hexval
-6bd8 1c 6c             .WORD Print_Decimal
-6bda e4 6b             .WORD Print_Octal
-6bdc de 6b             .WORD Print_Dual
-6bde          EndMod [Converter] Size = 45 [$2d]
+6bd6 23 6c    Conv_Tab .WORD Print_Hexval
+6bd8 2c 6c             .WORD Print_Decimal
+6bda f4 6b             .WORD Print_Octal
+6bdc ee 6b             .WORD Print_Dual
+6bde e0 6b             .WORD Print_Char
+6be0          EndMod [Converter] Size = 47 [$2f]
+
+              *****************
+              Module Print_Char
+              *****************
+
+6be0 a5 59             LDA  Long_AC
+6be2 c9 20             CMP  #' '
+6be4 90 07             BCC  _return
+6be6 c9 60             CMP  #$60
+6be8 b0 03             BCS  _return
+6bea 4c d2 ff          JMP  CHROUT
+6bed 60       _return  RTS
+6bee          EndMod [Print_Char] Size = 14 [$e]
 
               *****************
               Module Print_Dual
               *****************
 
-6bde a2 18             LDX  #24               ; digits
-6be0 a0 01             LDY  #1                ; bits per digit
-6be2 80 04             BRA  _entry
+6bee a2 18             LDX  #24               ; digits
+6bf0 a0 01             LDY  #1                ; bits per digit
+6bf2 80 04             BRA  _entry
 
               ***********
-6be4          Print_Octal
+6bf4          Print_Octal
               ***********
 
-6be4 a2 08             LDX  #8                ; digits
-6be6 a0 03             LDY  #3                ; bits per digit
+6bf4 a2 08             LDX  #8                ; digits
+6bf6 a0 03             LDY  #3                ; bits per digit
 
-6be8 20 6f 61 _entry   JSR  LAC_To_LCT
-6beb a3 00             LDZ  #0
-6bed 64 61             STZ  Long_PC
-6bef a3 30             LDZ  #'0'
-6bf1 5a                PHY                    ; save start value
-6bf2 7a       _loopa   PLY                    ; reinitialise
-6bf3 5a                PHY
-6bf4 a9 00             LDA  #0
-6bf6 06 5d    _loopb   ASL  Long_CT
-6bf8 eb 5e 00          ROW  Long_CT+1
-6bfb 2a                ROL  A
-6bfc 88                DEY
-6bfd d0 f7             BNE  _loopb
-6bff e0 01             CPX  #1                ; print last character
-6c01 f0 04             BEQ  _skip
-6c03 05 61             ORA  Long_PC
-6c05 f0 07             BEQ  _next
-6c07 09 30    _skip    ORA  #'0'
-6c09 64 61             STZ  Long_PC
-6c0b 20 d2 ff          JSR  CHROUT
-6c0e ca       _next    DEX
-6c0f d0 e1             BNE  _loopa
-6c11 7a                PLY                    ; cleanup stack
-6c12 60                RTS
-6c13          EndMod [Print_Dual] Size = 53 [$35]
+6bf8 20 6f 61 _entry   JSR  LAC_To_LCT
+6bfb a3 00             LDZ  #0
+6bfd 64 61             STZ  Long_PC
+6bff a3 30             LDZ  #'0'
+6c01 5a                PHY                    ; save start value
+6c02 7a       _loopa   PLY                    ; reinitialise
+6c03 5a                PHY
+6c04 a9 00             LDA  #0
+6c06 06 5d    _loopb   ASL  Long_CT
+6c08 eb 5e 00          ROW  Long_CT+1
+6c0b 2a                ROL  A
+6c0c 88                DEY
+6c0d d0 f7             BNE  _loopb
+6c0f e0 01             CPX  #1                ; print last character
+6c11 f0 04             BEQ  _skip
+6c13 05 61             ORA  Long_PC
+6c15 f0 07             BEQ  _next
+6c17 09 30    _skip    ORA  #'0'
+6c19 64 61             STZ  Long_PC
+6c1b 20 d2 ff          JSR  CHROUT
+6c1e ca       _next    DEX
+6c1f d0 e1             BNE  _loopa
+6c21 7a                PLY                    ; cleanup stack
+6c22 60                RTS
+6c23          EndMod [Print_Dual] Size = 53 [$35]
 
               *******************
               Module Print_Hexval
               *******************
 
-6c13 20 63 61         JSR  LAC_To_LPC
-6c16 a9 00            LDA  #0
-6c18 85 64            STA  Long_PC+3
-6c1a 80 32            BRA  Print_BCD
-6c1c          EndMod [Print_Hexval] Size = 9 [$9]
+6c23 20 63 61         JSR  LAC_To_LPC
+6c26 a9 00            LDA  #0
+6c28 85 64            STA  Long_PC+3
+6c2a 80 32            BRA  Print_BCD
+6c2c          EndMod [Print_Hexval] Size = 9 [$9]
 
               ********************
               Module Print_Decimal
@@ -2371,151 +2385,151 @@ fff0          PLOT       = $fff0
 
               ; max $ffffff = 16777215 (8 digits)
 
-6c1c 20 6f 61          JSR  LAC_To_LCT
-6c1f a2 03             LDX  #3                ; 4 BCD bytes = 8 digits
-6c21 a9 00             LDA  #0
-6c23 95 61    _clear   STA  Long_PC,X
-6c25 ca                DEX
-6c26 10 fb             BPL  _clear
+6c2c 20 6f 61          JSR  LAC_To_LCT
+6c2f a2 03             LDX  #3                ; 4 BCD bytes = 8 digits
+6c31 a9 00             LDA  #0
+6c33 95 61    _clear   STA  Long_PC,X
+6c35 ca                DEX
+6c36 10 fb             BPL  _clear
 
-6c28 a2 20             LDX  #32               ; source bits
-6c2a f8                SED
-6c2b 06 5d    _loop    ASL  Long_CT
-6c2d 26 5e             ROL  Long_CT+1
-6c2f eb 5f 00          ROW  Long_CT+2
-6c32 a5 61             LDA  Long_PC
-6c34 65 61             ADC  Long_PC
-6c36 85 61             STA  Long_PC
-6c38 a5 62             LDA  Long_PC+1
-6c3a 65 62             ADC  Long_PC+1
-6c3c 85 62             STA  Long_PC+1
-6c3e a5 63             LDA  Long_PC+2
-6c40 65 63             ADC  Long_PC+2
-6c42 85 63             STA  Long_PC+2
-6c44 a5 64             LDA  Long_PC+3
-6c46 65 64             ADC  Long_PC+3
-6c48 85 64             STA  Long_PC+3
-6c4a ca                DEX
-6c4b d0 de             BNE  _loop
-6c4d d8                CLD
-6c4e          EndMod [Print_Decimal] Size = 50 [$32]
+6c38 a2 20             LDX  #32               ; source bits
+6c3a f8                SED
+6c3b 06 5d    _loop    ASL  Long_CT
+6c3d 26 5e             ROL  Long_CT+1
+6c3f eb 5f 00          ROW  Long_CT+2
+6c42 a5 61             LDA  Long_PC
+6c44 65 61             ADC  Long_PC
+6c46 85 61             STA  Long_PC
+6c48 a5 62             LDA  Long_PC+1
+6c4a 65 62             ADC  Long_PC+1
+6c4c 85 62             STA  Long_PC+1
+6c4e a5 63             LDA  Long_PC+2
+6c50 65 63             ADC  Long_PC+2
+6c52 85 63             STA  Long_PC+2
+6c54 a5 64             LDA  Long_PC+3
+6c56 65 64             ADC  Long_PC+3
+6c58 85 64             STA  Long_PC+3
+6c5a ca                DEX
+6c5b d0 de             BNE  _loop
+6c5d d8                CLD
+6c5e          EndMod [Print_Decimal] Size = 50 [$32]
 
               ****************
               Module Print_BCD
               ****************
 
-6c4e a9 00             LDA  #0
-6c50 85 5d             STA  Long_CT
-6c52 a3 30             LDZ  #'0'
-6c54 a0 08             LDY  #8                ; max. digits
-6c56 a2 03    _loopa   LDX  #3                ; 4 bytes
-6c58 a9 00             LDA  #0
-6c5a 06 61    _loopb   ASL  Long_PC
-6c5c 26 62             ROL  Long_PC+1
-6c5e eb 63 00          ROW  Long_PC+2
-6c61 2a                ROL  A
-6c62 ca                DEX
-6c63 10 f5             BPL  _loopb
+6c5e a9 00             LDA  #0
+6c60 85 5d             STA  Long_CT
+6c62 a3 30             LDZ  #'0'
+6c64 a0 08             LDY  #8                ; max. digits
+6c66 a2 03    _loopa   LDX  #3                ; 4 bytes
+6c68 a9 00             LDA  #0
+6c6a 06 61    _loopb   ASL  Long_PC
+6c6c 26 62             ROL  Long_PC+1
+6c6e eb 63 00          ROW  Long_PC+2
+6c71 2a                ROL  A
+6c72 ca                DEX
+6c73 10 f5             BPL  _loopb
 
-6c65 c0 01             CPY  #1                ; print last character
-6c67 f0 04             BEQ  _skip
-6c69 05 5d             ORA  Long_CT
-6c6b f0 0d             BEQ  _next
-6c6d 09 30    _skip    ORA  #'0'
-6c6f 64 5d             STZ  Long_CT
-6c71 c9 3a             CMP  #$3a
-6c73 90 02             BCC  _print
-6c75 69 06             ADC  #6                ; + carry
-6c77 20 d2 ff _print   JSR  CHROUT
-6c7a 88       _next    DEY
-6c7b d0 d9             BNE  _loopa
-6c7d 60                RTS
-6c7e          EndMod [Print_BCD] Size = 48 [$30]
+6c75 c0 01             CPY  #1                ; print last character
+6c77 f0 04             BEQ  _skip
+6c79 05 5d             ORA  Long_CT
+6c7b f0 0d             BEQ  _next
+6c7d 09 30    _skip    ORA  #'0'
+6c7f 64 5d             STZ  Long_CT
+6c81 c9 3a             CMP  #$3a
+6c83 90 02             BCC  _print
+6c85 69 06             ADC  #6                ; + carry
+6c87 20 d2 ff _print   JSR  CHROUT
+6c8a 88       _next    DEY
+6c8b d0 d9             BNE  _loopa
+6c8d 60                RTS
+6c8e          EndMod [Print_BCD] Size = 48 [$30]
 
 
               ***************
               Module Mon_Disk
               ***************
 
-6c7e c6 6f             DEC  Buf_Index
-6c80 a6 6f             LDX  Buf_Index
-6c82 bd 00 02          LDA  Buffer,X
-6c85 f0 68             BEQ  Print_Disk_Status
-6c87 85 5d             STA  Long_CT           ; dir marker
-6c89 a0 ff             LDY  #$ff              ; SA = 15
-6c8b c9 24             CMP  #'$'
-6c8d d0 02             BNE  _lab
-6c8f a0 f0             LDY  #$f0              ; SA =  0
-6c91 a5 ba    _lab     LDA  FA
-6c93 20 b1 ff          JSR  LISTEN
-6c96 98                TYA                    ; SA
-6c97 20 93 ff          JSR  SECOND
-6c9a bd 00 02 _loop    LDA  Buffer,X
-6c9d f0 06             BEQ  _close
-6c9f 20 a8 ff          JSR  CIOUT
-6ca2 e8                INX
-6ca3 80 f5             BRA  _loop
-6ca5 20 ae ff _close   JSR  UNLSN
-6ca8 a5 5d             LDA  Long_CT
-6caa c9 24             CMP  #'$'
-6cac d0 41             BNE  Print_Disk_Status
-6cae 4c 40 6d          JMP  Directory
+6c8e c6 6f             DEC  Buf_Index
+6c90 a6 6f             LDX  Buf_Index
+6c92 bd 00 02          LDA  Buffer,X
+6c95 f0 68             BEQ  Print_Disk_Status
+6c97 85 5d             STA  Long_CT           ; dir marker
+6c99 a0 ff             LDY  #$ff              ; SA = 15
+6c9b c9 24             CMP  #'$'
+6c9d d0 02             BNE  _lab
+6c9f a0 f0             LDY  #$f0              ; SA =  0
+6ca1 a5 ba    _lab     LDA  FA
+6ca3 20 b1 ff          JSR  LISTEN
+6ca6 98                TYA                    ; SA
+6ca7 20 93 ff          JSR  SECOND
+6caa bd 00 02 _loop    LDA  Buffer,X
+6cad f0 06             BEQ  _close
+6caf 20 a8 ff          JSR  CIOUT
+6cb2 e8                INX
+6cb3 80 f5             BRA  _loop
+6cb5 20 ae ff _close   JSR  UNLSN
+6cb8 a5 5d             LDA  Long_CT
+6cba c9 24             CMP  #'$'
+6cbc d0 41             BNE  Print_Disk_Status
+6cbe 4c 50 6d          JMP  Directory
 
-6cb1          EndMod [Mon_Disk] Size = 51 [$33]
+6cc1          EndMod [Mon_Disk] Size = 51 [$33]
 
               **********************
               Module Get_Disk_Status
               **********************
 
-6cb1 a5 ba             LDA  FA
-6cb3 20 b4 ff          JSR  TALK
-6cb6 a9 6f             LDA  #$6f
-6cb8 20 96 ff          JSR  TKSA
-6cbb 20 a5 ff          JSR  ACPTR             ; 1st. digit
-6cbe 8d 34 04          STA  Disk_Msg
-6cc1 0a                ASL  A
-6cc2 0a                ASL  A
-6cc3 0a                ASL  A
-6cc4 0a                ASL  A
-6cc5 8d 0b 04          STA  Disk_Status       ; BCD
-6cc8 20 a5 ff          JSR  ACPTR             ; 2nd. digit
-6ccb 8d 35 04          STA  Disk_Msg+1
-6cce 29 0f             AND  #15
-6cd0 0d 0b 04          ORA  Disk_Status
-6cd3 8d 0b 04          STA  Disk_Status       ; complete BCD number
+6cc1 a5 ba             LDA  FA
+6cc3 20 b4 ff          JSR  TALK
+6cc6 a9 6f             LDA  #$6f
+6cc8 20 96 ff          JSR  TKSA
+6ccb 20 a5 ff          JSR  ACPTR             ; 1st. digit
+6cce 8d 34 04          STA  Disk_Msg
+6cd1 0a                ASL  A
+6cd2 0a                ASL  A
+6cd3 0a                ASL  A
+6cd4 0a                ASL  A
+6cd5 8d 0b 04          STA  Disk_Status       ; BCD
+6cd8 20 a5 ff          JSR  ACPTR             ; 2nd. digit
+6cdb 8d 35 04          STA  Disk_Msg+1
+6cde 29 0f             AND  #15
+6ce0 0d 0b 04          ORA  Disk_Status
+6ce3 8d 0b 04          STA  Disk_Status       ; complete BCD number
 
-6cd6 a0 01             LDY  #1
-6cd8 c8       _loop    INY
-6cd9 20 a5 ff          JSR  ACPTR
-6cdc 99 34 04          STA  Disk_Msg,Y
-6cdf c9 20             CMP  #' '
-6ce1 b0 f5             BCS  _loop
-6ce3 a9 00             LDA  #0
-6ce5 99 34 04          STA  Disk_Msg,Y
-6ce8 20 ab ff          JSR  UNTALK
-6ceb ad 0b 04          LDA  Disk_Status
-6cee 60                RTS
-6cef          EndMod [Get_Disk_Status] Size = 62 [$3e]
+6ce6 a0 01             LDY  #1
+6ce8 c8       _loop    INY
+6ce9 20 a5 ff          JSR  ACPTR
+6cec 99 34 04          STA  Disk_Msg,Y
+6cef c9 20             CMP  #' '
+6cf1 b0 f5             BCS  _loop
+6cf3 a9 00             LDA  #0
+6cf5 99 34 04          STA  Disk_Msg,Y
+6cf8 20 ab ff          JSR  UNTALK
+6cfb ad 0b 04          LDA  Disk_Status
+6cfe 60                RTS
+6cff          EndMod [Get_Disk_Status] Size = 62 [$3e]
 
               ************************
               Module Print_Disk_Status
               ************************
 
-6cef 20 b1 6c          JSR  Get_Disk_Status
+6cff 20 c1 6c          JSR  Get_Disk_Status
 
               **************
-6cf2          Print_Disk_Msg
+6d02          Print_Disk_Msg
               **************
 
-6cf2 20 24 6b          JSR  Print_CR
-6cf5 a0 00             LDY  #0
-6cf7 b9 34 04 _loop    LDA  Disk_Msg,Y
-6cfa f0 06             BEQ  _exit
-6cfc 20 d2 ff          JSR  CHROUT
-6cff c8                INY
-6d00 80 f5             BRA  _loop
-6d02 4c 24 6b _exit    JMP  Print_CR
-6d05          EndMod [Print_Disk_Status] Size = 22 [$16]
+6d02 20 24 6b          JSR  Print_CR
+6d05 a0 00             LDY  #0
+6d07 b9 34 04 _loop    LDA  Disk_Msg,Y
+6d0a f0 06             BEQ  _exit
+6d0c 20 d2 ff          JSR  CHROUT
+6d0f c8                INY
+6d10 80 f5             BRA  _loop
+6d12 4c 24 6b _exit    JMP  Print_CR
+6d15          EndMod [Print_Disk_Status] Size = 22 [$16]
 
               ; @[u] : print disk status for unit u
               ; @[u],$[=pattern] : print directory
@@ -2527,225 +2541,225 @@ fff0          PLOT       = $fff0
               Module Mon_DOS
               **************
 
-6d05 a2 08             LDX  #8                ; default device
-6d07 20 52 6b          JSR  Get_Glyph
-6d0a c9 30             CMP  #'0'
-6d0c 90 17             BCC  _unit
-6d0e c9 3a             CMP  #':'
-6d10 b0 13             BCS  _unit
-6d12 c6 6f             DEC  Buf_Index
-6d14 20 58 6a          JSR  Read_Number
-6d17 b0 0c             BCS  _unit
-6d19 a6 59             LDX  Long_AC           ; unit
-6d1b e0 04             CPX  #4
-6d1d 93 b4 f3          LBCC Mon_Error
-6d20 e0 1f             CPX  #31
-6d22 b3 af f3          LBCS Mon_Error
-6d25 86 ba    _unit    STX  FA
-6d27 c6 6f             DEC  Buf_Index
-6d29 20 61 6b _next    JSR  Get_Char
-6d2c f0 0c             BEQ  _status           ; only @u
-6d2e c9 20             CMP  #' '
-6d30 f0 f7             BEQ  _next
-6d32 c9 2c             CMP  #','
-6d34 f0 f3             BEQ  _next
-6d36 c9 55             CMP  #'U'              ; sector read/write
-6d38 f0 4e             BEQ  DOS_U
-6d3a 20 7e 6c _status  JSR  Mon_Disk
-6d3d 4c a5 60          JMP  Main
-6d40          EndMod [Mon_DOS] Size = 59 [$3b]
+6d15 a2 08             LDX  #8                ; default device
+6d17 20 52 6b          JSR  Get_Glyph
+6d1a c9 30             CMP  #'0'
+6d1c 90 17             BCC  _unit
+6d1e c9 3a             CMP  #':'
+6d20 b0 13             BCS  _unit
+6d22 c6 6f             DEC  Buf_Index
+6d24 20 58 6a          JSR  Read_Number
+6d27 b0 0c             BCS  _unit
+6d29 a6 59             LDX  Long_AC           ; unit
+6d2b e0 04             CPX  #4
+6d2d 93 a4 f3          LBCC Mon_Error
+6d30 e0 1f             CPX  #31
+6d32 b3 9f f3          LBCS Mon_Error
+6d35 86 ba    _unit    STX  FA
+6d37 c6 6f             DEC  Buf_Index
+6d39 20 61 6b _next    JSR  Get_Char
+6d3c f0 0c             BEQ  _status           ; only @u
+6d3e c9 20             CMP  #' '
+6d40 f0 f7             BEQ  _next
+6d42 c9 2c             CMP  #','
+6d44 f0 f3             BEQ  _next
+6d46 c9 55             CMP  #'U'              ; sector read/write
+6d48 f0 4e             BEQ  DOS_U
+6d4a 20 8e 6c _status  JSR  Mon_Disk
+6d4d 4c a5 60          JMP  Main
+6d50          EndMod [Mon_DOS] Size = 59 [$3b]
 
               ****************
               Module Directory
               ****************
 
-6d40 a5 ba             LDA  FA
-6d42 20 b4 ff          JSR  TALK
-6d45 a9 60             LDA  #$60
-6d47 85 b9             STA  SA
-6d49 20 96 ff          JSR  TKSA
-6d4c a9 00             LDA  #0
-6d4e 85 90             STA  STATUS
+6d50 a5 ba             LDA  FA
+6d52 20 b4 ff          JSR  TALK
+6d55 a9 60             LDA  #$60
+6d57 85 b9             STA  SA
+6d59 20 96 ff          JSR  TKSA
+6d5c a9 00             LDA  #0
+6d5e 85 90             STA  STATUS
 
-6d50 a3 06             LDZ  #6                ; load address, pseudo link, pseudo number
-6d52 aa       _loopb   TAX                    ; X = previous byte
-6d53 20 a5 ff          JSR  ACPTR             ; A = current  byte
-6d56 a4 90             LDY  STATUS
-6d58 d0 2b             BNE  _exit
-6d5a 3b                DEZ
-6d5b d0 f5             BNE  _loopb            ; X/A = last read word
+6d60 a3 06             LDZ  #6                ; load address, pseudo link, pseudo number
+6d62 aa       _loopb   TAX                    ; X = previous byte
+6d63 20 a5 ff          JSR  ACPTR             ; A = current  byte
+6d66 a4 90             LDY  STATUS
+6d68 d0 2b             BNE  _exit
+6d6a 3b                DEZ
+6d6b d0 f5             BNE  _loopb            ; X/A = last read word
 
-6d5d 86 59             STX  Long_AC
-6d5f 85 5a             STA  Long_AC+1
-6d61 64 5b             STZ  Long_AC+2
-6d63 64 5c             STZ  Long_AC+3
-6d65 20 1c 6c          JSR  Print_Decimal     ; file size
-6d68 20 1f 6b          JSR  Print_Blank
+6d6d 86 59             STX  Long_AC
+6d6f 85 5a             STA  Long_AC+1
+6d71 64 5b             STZ  Long_AC+2
+6d73 64 5c             STZ  Long_AC+3
+6d75 20 2c 6c          JSR  Print_Decimal     ; file size
+6d78 20 1f 6b          JSR  Print_Blank
 
-6d6b 20 a5 ff _loopc   JSR  ACPTR             ; print file entry
-6d6e f0 09             BEQ  _cr
-6d70 a4 90             LDY  STATUS
-6d72 d0 11             BNE  _exit
-6d74 20 d2 ff          JSR  CHROUT
-6d77 90 f2             BCC  _loopc
+6d7b 20 a5 ff _loopc   JSR  ACPTR             ; print file entry
+6d7e f0 09             BEQ  _cr
+6d80 a4 90             LDY  STATUS
+6d82 d0 11             BNE  _exit
+6d84 20 d2 ff          JSR  CHROUT
+6d87 90 f2             BCC  _loopc
 
-6d79 20 24 6b _cr      JSR  Print_CR
-6d7c 20 e1 ff          JSR  STOP
-6d7f f0 04             BEQ  _exit
-6d81 a3 04             LDZ  #4
-6d83 80 cd             BRA  _loopb            ; next file
-6d85 4c ab ff _exit    JMP  UNTALK
-6d88          EndMod [Directory] Size = 72 [$48]
+6d89 20 24 6b _cr      JSR  Print_CR
+6d8c 20 e1 ff          JSR  STOP
+6d8f f0 04             BEQ  _exit
+6d91 a3 04             LDZ  #4
+6d93 80 cd             BRA  _loopb            ; next file
+6d95 4c ab ff _exit    JMP  UNTALK
+6d98          EndMod [Directory] Size = 72 [$48]
 
               ************
               Module DOS_U
               ************
 
-6d88 20 61 6b          JSR  Get_Char
-6d8b c9 31             CMP  #'1'            ; U1: read
-6d8d 93 44 f3          LBCC Mon_Error
-6d90 c9 33             CMP  #'3'            ; U2: write
-6d92 b3 3f f3          LBCS Mon_Error
-6d95 8d 0d 04          STA  Mon_Data+1      ; U type
-6d98 e6 6f             INC  Buf_Index
-6d9a 20 3b 6a          JSR  Get_LAC
-6d9d b3 34 f3          LBCS Mon_Error
-6da0 20 63 61          JSR  LAC_To_LPC      ; Long_PC = memory address
+6d98 20 61 6b          JSR  Get_Char
+6d9b c9 31             CMP  #'1'            ; U1: read
+6d9d 93 34 f3          LBCC Mon_Error
+6da0 c9 33             CMP  #'3'            ; U2: write
+6da2 b3 2f f3          LBCS Mon_Error
+6da5 8d 0d 04          STA  Mon_Data+1      ; U type
+6da8 e6 6f             INC  Buf_Index
+6daa 20 3b 6a          JSR  Get_LAC
+6dad b3 24 f3          LBCS Mon_Error
+6db0 20 63 61          JSR  LAC_To_LPC      ; Long_PC = memory address
 
-6da3 20 3b 6a          JSR  Get_LAC
-6da6 b3 2b f3          LBCS Mon_Error
-6da9 a5 59             LDA  Long_AC
-6dab 8d 09 04          STA  Disk_Track
+6db3 20 3b 6a          JSR  Get_LAC
+6db6 b3 1b f3          LBCS Mon_Error
+6db9 a5 59             LDA  Long_AC
+6dbb 8d 09 04          STA  Disk_Track
 
-6dae 20 3b 6a          JSR  Get_LAC
-6db1 b3 20 f3          LBCS Mon_Error
-6db4 a5 59             LDA  Long_AC
-6db6 8d 0a 04          STA  Disk_Sector
+6dbe 20 3b 6a          JSR  Get_LAC
+6dc1 b3 10 f3          LBCS Mon_Error
+6dc4 a5 59             LDA  Long_AC
+6dc6 8d 0a 04          STA  Disk_Sector
 
-6db9 20 3b 6a          JSR  Get_LAC
-6dbc 20 6f 61          JSR  LAC_To_LCT        ; Long_CT = sector count
-6dbf c3 5d             DEW  Long_CT           ; Long_CT = -1 for single
+6dc9 20 3b 6a          JSR  Get_LAC
+6dcc 20 6f 61          JSR  LAC_To_LCT        ; Long_CT = sector count
+6dcf c3 5d             DEW  Long_CT           ; Long_CT = -1 for single
 
-6dc1 20 bf 6e          JSR  Open_Disk_Buffer
+6dd1 20 cf 6e          JSR  Open_Disk_Buffer
 
-6dc4 ad 0d 04 _loop    LDA  Mon_Data+1
-6dc7 4a                LSR  A
-6dc8 f0 0a             BEQ  _write
-6dca 20 ef 6d          JSR  Find_Next_Sector
-6dcd d0 17             BNE  _error
-6dcf 20 49 6e          JSR  Read_Sector
-6dd2 80 08             BRA  _next
+6dd4 ad 0d 04 _loop    LDA  Mon_Data+1
+6dd7 4a                LSR  A
+6dd8 f0 0a             BEQ  _write
+6dda 20 ff 6d          JSR  Find_Next_Sector
+6ddd d0 17             BNE  _error
+6ddf 20 59 6e          JSR  Read_Sector
+6de2 80 08             BRA  _next
 
-6dd4 20 63 6e _write   JSR  Write_Sector
-6dd7 20 ef 6d          JSR  Find_Next_Sector
-6dda d0 0a             BNE  _error
+6de4 20 73 6e _write   JSR  Write_Sector
+6de7 20 ff 6d          JSR  Find_Next_Sector
+6dea d0 0a             BNE  _error
 
-6ddc 20 91 6b _next    JSR  Inc_LPC_Page
-6ddf ee 0a 04          INC  Disk_Sector
-6de2 c3 5d             DEW  Long_CT
-6de4 10 de             BPL  _loop
+6dec 20 91 6b _next    JSR  Inc_LPC_Page
+6def ee 0a 04          INC  Disk_Sector
+6df2 c3 5d             DEW  Long_CT
+6df4 10 de             BPL  _loop
 
-6de6 20 f2 6c _error   JSR  Print_Disk_Msg
-6de9 20 db 6e          JSR  Close_Disk_Buffer
-6dec 4c a5 60          JMP  Main
-6def          EndMod [DOS_U] Size = 103 [$67]
+6df6 20 02 6d _error   JSR  Print_Disk_Msg
+6df9 20 eb 6e          JSR  Close_Disk_Buffer
+6dfc 4c a5 60          JMP  Main
+6dff          EndMod [DOS_U] Size = 103 [$67]
 
               ***********************
               Module Find_Next_Sector
               ***********************
 
-6def 20 9d 6e          JSR  Build_U_String
-6df2 20 38 6e          JSR  Send_Disk_Command
-6df5 20 b1 6c          JSR  Get_Disk_Status
-6df8 f0 1d             BEQ  _return           ; OK
-6dfa c9 66             CMP  #$66              ; illegal track or sector
-6dfc d0 13             BNE  _error            ; error
-6dfe a9 00             LDA  #0
-6e00 8d 0a 04          STA  Disk_Sector
-6e03 ee 09 04          INC  Disk_Track        ; try next track
-6e06 20 9d 6e          JSR  Build_U_String
-6e09 20 38 6e          JSR  Send_Disk_Command
-6e0c 20 b1 6c          JSR  Get_Disk_Status
-6e0f f0 06             BEQ  _return
-6e11 20 f2 6c _error   JSR  Print_Disk_Msg
-6e14 ad 0b 04          LDA  Disk_Status
-6e17 60       _return  RTS
-6e18          EndMod [Find_Next_Sector] Size = 41 [$29]
+6dff 20 ad 6e          JSR  Build_U_String
+6e02 20 48 6e          JSR  Send_Disk_Command
+6e05 20 c1 6c          JSR  Get_Disk_Status
+6e08 f0 1d             BEQ  _return           ; OK
+6e0a c9 66             CMP  #$66              ; illegal track or sector
+6e0c d0 13             BNE  _error            ; error
+6e0e a9 00             LDA  #0
+6e10 8d 0a 04          STA  Disk_Sector
+6e13 ee 09 04          INC  Disk_Track        ; try next track
+6e16 20 ad 6e          JSR  Build_U_String
+6e19 20 48 6e          JSR  Send_Disk_Command
+6e1c 20 c1 6c          JSR  Get_Disk_Status
+6e1f f0 06             BEQ  _return
+6e21 20 02 6d _error   JSR  Print_Disk_Msg
+6e24 ad 0b 04          LDA  Disk_Status
+6e27 60       _return  RTS
+6e28          EndMod [Find_Next_Sector] Size = 41 [$29]
 
               ***************************
               Module Open_Command_Channel
               ***************************
 
-6e18 a5 ba             LDA  FA
-6e1a 20 b1 ff          JSR  LISTEN
-6e1d a9 ff             LDA  #$ff
-6e1f 20 93 ff          JSR  SECOND
-6e22 a0 00             LDY  #0
-6e24 84 90             STY  STATUS
-6e26 60                RTS
-6e27          EndMod [Open_Command_Channel] Size = 15 [$f]
+6e28 a5 ba             LDA  FA
+6e2a 20 b1 ff          JSR  LISTEN
+6e2d a9 ff             LDA  #$ff
+6e2f 20 93 ff          JSR  SECOND
+6e32 a0 00             LDY  #0
+6e34 84 90             STY  STATUS
+6e36 60                RTS
+6e37          EndMod [Open_Command_Channel] Size = 15 [$f]
 
               ***************
               Module Reset_BP
               ***************
 
-6e27 20 18 6e          JSR  Open_Command_Channel
-6e2a b9 e4 71 _loop    LDA  BP_ZERO,Y
-6e2d f0 06             BEQ  _end
-6e2f 20 a8 ff          JSR  CIOUT
-6e32 c8                INY
-6e33 80 f5             BRA  _loop
-6e35 4c ae ff _end     JMP  UNLSN
-6e38          EndMod [Reset_BP] Size = 17 [$11]
+6e37 20 28 6e          JSR  Open_Command_Channel
+6e3a b9 f4 71 _loop    LDA  BP_ZERO,Y
+6e3d f0 06             BEQ  _end
+6e3f 20 a8 ff          JSR  CIOUT
+6e42 c8                INY
+6e43 80 f5             BRA  _loop
+6e45 4c ae ff _end     JMP  UNLSN
+6e48          EndMod [Reset_BP] Size = 17 [$11]
 
               ************************
               Module Send_Disk_Command
               ************************
 
-6e38 20 18 6e          JSR  Open_Command_Channel
-6e3b b9 0c 04 _loop    LDA  Mon_Data,Y
-6e3e f0 06             BEQ  _end
-6e40 20 a8 ff          JSR  CIOUT
-6e43 c8                INY
-6e44 80 f5             BRA  _loop
-6e46 4c ae ff _end     JMP  UNLSN
-6e49          EndMod [Send_Disk_Command] Size = 17 [$11]
+6e48 20 28 6e          JSR  Open_Command_Channel
+6e4b b9 0c 04 _loop    LDA  Mon_Data,Y
+6e4e f0 06             BEQ  _end
+6e50 20 a8 ff          JSR  CIOUT
+6e53 c8                INY
+6e54 80 f5             BRA  _loop
+6e56 4c ae ff _end     JMP  UNLSN
+6e59          EndMod [Send_Disk_Command] Size = 17 [$11]
 
               ******************
               Module Read_Sector
               ******************
 
-6e49 a5 ba             LDA  FA
-6e4b 20 b4 ff          JSR  TALK
-6e4e a9 69             LDA  #$69              ; SA = 9
-6e50 20 96 ff          JSR  TKSA
-6e53 a3 00             LDZ  #0
-6e55 64 90             STZ  STATUS
-6e57 20 a5 ff _loop    JSR  ACPTR
-6e5a ea 92 61          STA  [Long_PC],Z
-6e5d 1b                INZ
-6e5e d0 f7             BNE  _loop
-6e60 4c ab ff          JMP  UNTALK
-6e63          EndMod [Read_Sector] Size = 26 [$1a]
+6e59 a5 ba             LDA  FA
+6e5b 20 b4 ff          JSR  TALK
+6e5e a9 69             LDA  #$69              ; SA = 9
+6e60 20 96 ff          JSR  TKSA
+6e63 a3 00             LDZ  #0
+6e65 64 90             STZ  STATUS
+6e67 20 a5 ff _loop    JSR  ACPTR
+6e6a ea 92 61          STA  [Long_PC],Z
+6e6d 1b                INZ
+6e6e d0 f7             BNE  _loop
+6e70 4c ab ff          JMP  UNTALK
+6e73          EndMod [Read_Sector] Size = 26 [$1a]
 
               ******************
               Module Write_Sector
               ******************
 
-6e63 20 27 6e          JSR  Reset_BP          ; reset disk buffer pointer
-6e66 a5 ba             LDA  FA
-6e68 20 b1 ff          JSR  LISTEN
-6e6b a9 69             LDA  #$69              ; SA = 9
-6e6d 20 96 ff          JSR  TKSA
-6e70 a3 00             LDZ  #0
-6e72 64 90             STZ  STATUS
-6e74 ea b2 61 _loop    LDA  [Long_PC],Z
-6e77 20 a8 ff          JSR  CIOUT
-6e7a 1b                INZ
-6e7b d0 f7             BNE  _loop
-6e7d 20 ae ff          JSR  UNLSN
-6e80 60                RTS
-6e81          EndMod [Write_Sector] Size = 30 [$1e]
+6e73 20 37 6e          JSR  Reset_BP          ; reset disk buffer pointer
+6e76 a5 ba             LDA  FA
+6e78 20 b1 ff          JSR  LISTEN
+6e7b a9 69             LDA  #$69              ; SA = 9
+6e7d 20 96 ff          JSR  TKSA
+6e80 a3 00             LDZ  #0
+6e82 64 90             STZ  STATUS
+6e84 ea b2 61 _loop    LDA  [Long_PC],Z
+6e87 20 a8 ff          JSR  CIOUT
+6e8a 1b                INZ
+6e8b d0 f7             BNE  _loop
+6e8d 20 ae ff          JSR  UNLSN
+6e90 60                RTS
+6e91          EndMod [Write_Sector] Size = 30 [$1e]
 
               *************
               Module Set_TS
@@ -2754,20 +2768,20 @@ fff0          PLOT       = $fff0
               ; Input  A = track or sector
               ;        X = string index
 
-6e81 c9 64    _100      CMP  #100
-6e83 90 07              BCC  _10
-6e85 fe 0c 04           INC  Mon_Data,X
-6e88 e9 64              SBC  #100
-6e8a 80 f5              BRA  _100
-6e8c c9 0a    _10       CMP  #10
-6e8e 90 07              BCC  _1
-6e90 fe 0d 04           INC  Mon_Data+1,X
-6e93 e9 0a              SBC  #10
-6e95 80 f5              BRA  _10
-6e97 09 30    _1        ORA  #'0'
-6e99 9d 0e 04           STA  Mon_Data+2,X
-6e9c 60                 RTS
-6e9d          EndMod [Set_TS] Size = 28 [$1c]
+6e91 c9 64    _100      CMP  #100
+6e93 90 07              BCC  _10
+6e95 fe 0c 04           INC  Mon_Data,X
+6e98 e9 64              SBC  #100
+6e9a 80 f5              BRA  _100
+6e9c c9 0a    _10       CMP  #10
+6e9e 90 07              BCC  _1
+6ea0 fe 0d 04           INC  Mon_Data+1,X
+6ea3 e9 0a              SBC  #10
+6ea5 80 f5              BRA  _10
+6ea7 09 30    _1        ORA  #'0'
+6ea9 9d 0e 04           STA  Mon_Data+2,X
+6eac 60                 RTS
+6ead          EndMod [Set_TS] Size = 28 [$1c]
 
               ; @[u],U1 mem track startsec [endsec] : read  disk sector(s)
 
@@ -2777,55 +2791,55 @@ fff0          PLOT       = $fff0
               Module Build_U_String
               *********************
 
-6e9d a2 0e             LDX  #14
-6e9f bd d5 71 _loop    LDA  U1,X
-6ea2 9d 0c 04          STA  Mon_Data,X
-6ea5 ca                DEX
-6ea6 e0 02             CPX  #2
-6ea8 b0 f5             BCS  _loop
-6eaa a9 55             LDA  #'U'
-6eac 8d 0c 04          STA  Mon_Data
-6eaf ad 09 04          LDA  Disk_Track
-6eb2 a2 07             LDX  #7
-6eb4 20 81 6e          JSR  Set_TS
-6eb7 ad 0a 04          LDA  Disk_Sector
-6eba a2 0b             LDX  #11
-6ebc 4c 81 6e          JMP  Set_TS
-6ebf          EndMod [Build_U_String] Size = 34 [$22]
+6ead a2 0e             LDX  #14
+6eaf bd e5 71 _loop    LDA  U1,X
+6eb2 9d 0c 04          STA  Mon_Data,X
+6eb5 ca                DEX
+6eb6 e0 02             CPX  #2
+6eb8 b0 f5             BCS  _loop
+6eba a9 55             LDA  #'U'
+6ebc 8d 0c 04          STA  Mon_Data
+6ebf ad 09 04          LDA  Disk_Track
+6ec2 a2 07             LDX  #7
+6ec4 20 91 6e          JSR  Set_TS
+6ec7 ad 0a 04          LDA  Disk_Sector
+6eca a2 0b             LDX  #11
+6ecc 4c 91 6e          JMP  Set_TS
+6ecf          EndMod [Build_U_String] Size = 34 [$22]
 
               ***********************
               Module Open_Disk_Buffer
               ***********************
 
-6ebf a9 00             LDA  #0
-6ec1 85 90             STA  STATUS
-6ec3 a5 ba             LDA  FA
-6ec5 20 b1 ff          JSR  LISTEN          ; open fa,9,"#"
-6ec8 a9 f9             LDA  #$f9            ; sa = 9
-6eca 20 93 ff          JSR  SECOND
-6ecd a9 23             LDA  #'#'            ; open buffer
-6ecf 20 a8 ff          JSR  CIOUT
-6ed2 20 ae ff          JSR  UNLSN
-6ed5 a5 90             LDA  STATUS
-6ed7 d3 16 fe          LBNE Print_Disk_Status
-6eda 60                RTS
-6edb          EndMod [Open_Disk_Buffer] Size = 28 [$1c]
+6ecf a9 00             LDA  #0
+6ed1 85 90             STA  STATUS
+6ed3 a5 ba             LDA  FA
+6ed5 20 b1 ff          JSR  LISTEN          ; open fa,9,"#"
+6ed8 a9 f9             LDA  #$f9            ; sa = 9
+6eda 20 93 ff          JSR  SECOND
+6edd a9 23             LDA  #'#'            ; open buffer
+6edf 20 a8 ff          JSR  CIOUT
+6ee2 20 ae ff          JSR  UNLSN
+6ee5 a5 90             LDA  STATUS
+6ee7 d3 16 fe          LBNE Print_Disk_Status
+6eea 60                RTS
+6eeb          EndMod [Open_Disk_Buffer] Size = 28 [$1c]
 
               ************************
               Module Close_Disk_Buffer
               ************************
 
-6edb a9 00             LDA  #0
-6edd 85 90             STA  STATUS
-6edf a5 ba             LDA  FA
-6ee1 20 b1 ff          JSR  LISTEN          ; open fa,9,"#"
-6ee4 a9 e9             LDA  #$e9            ; sa = 9
-6ee6 20 93 ff          JSR  SECOND
-6ee9 20 ae ff          JSR  UNLSN
-6eec a5 90             LDA  STATUS
-6eee d3 ff fd          LBNE Print_Disk_Status
-6ef1 60                RTS
-6ef2          EndMod [Close_Disk_Buffer] Size = 23 [$17]
+6eeb a9 00             LDA  #0
+6eed 85 90             STA  STATUS
+6eef a5 ba             LDA  FA
+6ef1 20 b1 ff          JSR  LISTEN          ; open fa,9,"#"
+6ef4 a9 e9             LDA  #$e9            ; sa = 9
+6ef6 20 93 ff          JSR  SECOND
+6ef9 20 ae ff          JSR  UNLSN
+6efc a5 90             LDA  STATUS
+6efe d3 ff fd          LBNE Print_Disk_Status
+6f01 60                RTS
+6f02          EndMod [Close_Disk_Buffer] Size = 23 [$17]
 
 
               ; The 3 letter mnemonics are encoded as three 5-bit values
@@ -2844,248 +2858,248 @@ fff0          PLOT       = $fff0
               ; The operator <" stores the right (low) byte of the packed value
 
               *****
-6ef2          MNE_L
+6f02          MNE_L
               *****
 
-6ef2 11                .BYTE >"ADC"
-6ef3 13                .BYTE >"AND"
-6ef4 15                .BYTE >"ASL"
-6ef5 15                .BYTE >"ASR"
-6ef6 15                .BYTE >"ASW"
-6ef7 18                .BYTE >"BBR"
-6ef8 18                .BYTE >"BBS"
-6ef9 19                .BYTE >"BCC"
-6efa 19                .BYTE >"BCS"
-6efb 19                .BYTE >"BEQ"
-6efc 1a                .BYTE >"BIT"
-6efd 1b                .BYTE >"BMI"
-6efe 1b                .BYTE >"BNE"
-6eff 1c                .BYTE >"BPL"
-6f00 1c                .BYTE >"BRA"
-6f01 1c                .BYTE >"BRK"
-6f02 1d                .BYTE >"BSR"
-6f03 1d                .BYTE >"BVC"
-6f04 1d                .BYTE >"BVS"
-6f05 23                .BYTE >"CLC"
-6f06 23                .BYTE >"CLD"
-6f07 23                .BYTE >"CLE"
-6f08 23                .BYTE >"CLI"
-6f09 23                .BYTE >"CLV"
-6f0a 23                .BYTE >"CMP"
-6f0b 24                .BYTE >"CPX"
-6f0c 24                .BYTE >"CPY"
-6f0d 24                .BYTE >"CPZ"
-6f0e 29                .BYTE >"DEC"
-6f0f 29                .BYTE >"DEW"
-6f10 29                .BYTE >"DEX"
-6f11 29                .BYTE >"DEY"
-6f12 29                .BYTE >"DEZ"
-6f13 34                .BYTE >"EOR"
-6f14 53                .BYTE >"INC"
-6f15 53                .BYTE >"INW"
-6f16 53                .BYTE >"INX"
-6f17 53                .BYTE >"INY"
-6f18 53                .BYTE >"INZ"
-6f19 5b                .BYTE >"JMP"
-6f1a 5d                .BYTE >"JSR"
-6f1b 69                .BYTE >"LDA"
-6f1c 69                .BYTE >"LDX"
-6f1d 69                .BYTE >"LDY"
-6f1e 69                .BYTE >"LDZ"
-6f1f 6d                .BYTE >"LSR"
-6f20 70                .BYTE >"MAP"
-6f21 79                .BYTE >"NEG"
-6f22 7c                .BYTE >"NOP"
-6f23 84                .BYTE >"ORA"
-6f24 8a                .BYTE >"PHA"
-6f25 8a                .BYTE >"PHP"
-6f26 8a                .BYTE >"PHW"
-6f27 8a                .BYTE >"PHX"
-6f28 8a                .BYTE >"PHY"
-6f29 8a                .BYTE >"PHZ"
-6f2a 8b                .BYTE >"PLA"
-6f2b 8b                .BYTE >"PLP"
-6f2c 8b                .BYTE >"PLX"
-6f2d 8b                .BYTE >"PLY"
-6f2e 8b                .BYTE >"PLZ"
-6f2f 9b                .BYTE >"RMB"
-6f30 9c                .BYTE >"ROL"
-6f31 9c                .BYTE >"ROR"
-6f32 9c                .BYTE >"ROW"
-6f33 9d                .BYTE >"RTI"
-6f34 9d                .BYTE >"RTS"
-6f35 a0                .BYTE >"SBC"
-6f36 a1                .BYTE >"SEC"
-6f37 a1                .BYTE >"SED"
-6f38 a1                .BYTE >"SEE"
-6f39 a1                .BYTE >"SEI"
-6f3a a3                .BYTE >"SMB"
-6f3b a5                .BYTE >"STA"
-6f3c a5                .BYTE >"STX"
-6f3d a5                .BYTE >"STY"
-6f3e a5                .BYTE >"STZ"
-6f3f a8                .BYTE >"TAB"
-6f40 a8                .BYTE >"TAX"
-6f41 a8                .BYTE >"TAY"
-6f42 a8                .BYTE >"TAZ"
-6f43 a8                .BYTE >"TBA"
-6f44 ac                .BYTE >"TRB"
-6f45 ad                .BYTE >"TSB"
-6f46 ad                .BYTE >"TSX"
-6f47 ad                .BYTE >"TSY"
-6f48 ae                .BYTE >"TXA"
-6f49 ae                .BYTE >"TXS"
-6f4a ae                .BYTE >"TYA"
-6f4b ae                .BYTE >"TYS"
-6f4c ae                .BYTE >"TZA"
+6f02 11                .BYTE >"ADC"
+6f03 13                .BYTE >"AND"
+6f04 15                .BYTE >"ASL"
+6f05 15                .BYTE >"ASR"
+6f06 15                .BYTE >"ASW"
+6f07 18                .BYTE >"BBR"
+6f08 18                .BYTE >"BBS"
+6f09 19                .BYTE >"BCC"
+6f0a 19                .BYTE >"BCS"
+6f0b 19                .BYTE >"BEQ"
+6f0c 1a                .BYTE >"BIT"
+6f0d 1b                .BYTE >"BMI"
+6f0e 1b                .BYTE >"BNE"
+6f0f 1c                .BYTE >"BPL"
+6f10 1c                .BYTE >"BRA"
+6f11 1c                .BYTE >"BRK"
+6f12 1d                .BYTE >"BSR"
+6f13 1d                .BYTE >"BVC"
+6f14 1d                .BYTE >"BVS"
+6f15 23                .BYTE >"CLC"
+6f16 23                .BYTE >"CLD"
+6f17 23                .BYTE >"CLE"
+6f18 23                .BYTE >"CLI"
+6f19 23                .BYTE >"CLV"
+6f1a 23                .BYTE >"CMP"
+6f1b 24                .BYTE >"CPX"
+6f1c 24                .BYTE >"CPY"
+6f1d 24                .BYTE >"CPZ"
+6f1e 29                .BYTE >"DEC"
+6f1f 29                .BYTE >"DEW"
+6f20 29                .BYTE >"DEX"
+6f21 29                .BYTE >"DEY"
+6f22 29                .BYTE >"DEZ"
+6f23 34                .BYTE >"EOR"
+6f24 53                .BYTE >"INC"
+6f25 53                .BYTE >"INW"
+6f26 53                .BYTE >"INX"
+6f27 53                .BYTE >"INY"
+6f28 53                .BYTE >"INZ"
+6f29 5b                .BYTE >"JMP"
+6f2a 5d                .BYTE >"JSR"
+6f2b 69                .BYTE >"LDA"
+6f2c 69                .BYTE >"LDX"
+6f2d 69                .BYTE >"LDY"
+6f2e 69                .BYTE >"LDZ"
+6f2f 6d                .BYTE >"LSR"
+6f30 70                .BYTE >"MAP"
+6f31 79                .BYTE >"NEG"
+6f32 7c                .BYTE >"NOP"
+6f33 84                .BYTE >"ORA"
+6f34 8a                .BYTE >"PHA"
+6f35 8a                .BYTE >"PHP"
+6f36 8a                .BYTE >"PHW"
+6f37 8a                .BYTE >"PHX"
+6f38 8a                .BYTE >"PHY"
+6f39 8a                .BYTE >"PHZ"
+6f3a 8b                .BYTE >"PLA"
+6f3b 8b                .BYTE >"PLP"
+6f3c 8b                .BYTE >"PLX"
+6f3d 8b                .BYTE >"PLY"
+6f3e 8b                .BYTE >"PLZ"
+6f3f 9b                .BYTE >"RMB"
+6f40 9c                .BYTE >"ROL"
+6f41 9c                .BYTE >"ROR"
+6f42 9c                .BYTE >"ROW"
+6f43 9d                .BYTE >"RTI"
+6f44 9d                .BYTE >"RTS"
+6f45 a0                .BYTE >"SBC"
+6f46 a1                .BYTE >"SEC"
+6f47 a1                .BYTE >"SED"
+6f48 a1                .BYTE >"SEE"
+6f49 a1                .BYTE >"SEI"
+6f4a a3                .BYTE >"SMB"
+6f4b a5                .BYTE >"STA"
+6f4c a5                .BYTE >"STX"
+6f4d a5                .BYTE >"STY"
+6f4e a5                .BYTE >"STZ"
+6f4f a8                .BYTE >"TAB"
+6f50 a8                .BYTE >"TAX"
+6f51 a8                .BYTE >"TAY"
+6f52 a8                .BYTE >"TAZ"
+6f53 a8                .BYTE >"TBA"
+6f54 ac                .BYTE >"TRB"
+6f55 ad                .BYTE >"TSB"
+6f56 ad                .BYTE >"TSX"
+6f57 ad                .BYTE >"TSY"
+6f58 ae                .BYTE >"TXA"
+6f59 ae                .BYTE >"TXS"
+6f5a ae                .BYTE >"TYA"
+6f5b ae                .BYTE >"TYS"
+6f5c ae                .BYTE >"TZA"
 
               *****
-6f4d          MNE_R
+6f5d          MNE_R
               *****
 
-6f4d 48                .BYTE <"ADC" ; 00
-6f4e ca                .BYTE <"AND" ; 01
-6f4f 1a                .BYTE <"ASL" ; 02
-6f50 26                .BYTE <"ASR" ; 03
-6f51 30                .BYTE <"ASW" ; 04
-6f52 e6                .BYTE <"BBR" ; 05
-6f53 e8                .BYTE <"BBS" ; 06
-6f54 08                .BYTE <"BCC" ; 07
-6f55 28                .BYTE <"BCS" ; 08
-6f56 a4                .BYTE <"BEQ" ; 09
-6f57 aa                .BYTE <"BIT" ; 0a
-6f58 94                .BYTE <"BMI" ; 0b
-6f59 cc                .BYTE <"BNE" ; 0c
-6f5a 5a                .BYTE <"BPL" ; 0d
-6f5b c4                .BYTE <"BRA" ; 0e
-6f5c d8                .BYTE <"BRK" ; 0f
-6f5d 26                .BYTE <"BSR" ; 10
-6f5e c8                .BYTE <"BVC" ; 11
-6f5f e8                .BYTE <"BVS" ; 12
-6f60 48                .BYTE <"CLC" ; 13
-6f61 4a                .BYTE <"CLD" ; 14
-6f62 4c                .BYTE <"CLE" ; 15
-6f63 54                .BYTE <"CLI" ; 16
-6f64 6e                .BYTE <"CLV" ; 17
-6f65 a2                .BYTE <"CMP" ; 18
-6f66 72                .BYTE <"CPX" ; 19
-6f67 74                .BYTE <"CPY" ; 1a
-6f68 76                .BYTE <"CPZ" ; 1b
-6f69 88                .BYTE <"DEC" ; 1c
-6f6a b0                .BYTE <"DEW" ; 1d
-6f6b b2                .BYTE <"DEX" ; 1e
-6f6c b4                .BYTE <"DEY" ; 1f
-6f6d b6                .BYTE <"DEZ"
-6f6e 26                .BYTE <"EOR"
-6f6f c8                .BYTE <"INC"
-6f70 f0                .BYTE <"INW"
-6f71 f2                .BYTE <"INX"
-6f72 f4                .BYTE <"INY"
-6f73 f6                .BYTE <"INZ"
-6f74 a2                .BYTE <"JMP"
-6f75 26                .BYTE <"JSR"
-6f76 44                .BYTE <"LDA"
-6f77 72                .BYTE <"LDX"
-6f78 74                .BYTE <"LDY"
-6f79 76                .BYTE <"LDZ"
-6f7a 26                .BYTE <"LSR"
-6f7b a2                .BYTE <"MAP"
-6f7c 90                .BYTE <"NEG"
-6f7d 22                .BYTE <"NOP"
-6f7e c4                .BYTE <"ORA"
-6f7f 44                .BYTE <"PHA"
-6f80 62                .BYTE <"PHP"
-6f81 70                .BYTE <"PHW"
-6f82 72                .BYTE <"PHX"
-6f83 74                .BYTE <"PHY"
-6f84 76                .BYTE <"PHZ"
-6f85 44                .BYTE <"PLA"
-6f86 62                .BYTE <"PLP"
-6f87 72                .BYTE <"PLX"
-6f88 74                .BYTE <"PLY"
-6f89 76                .BYTE <"PLZ"
-6f8a 86                .BYTE <"RMB"
-6f8b 1a                .BYTE <"ROL"
-6f8c 26                .BYTE <"ROR"
-6f8d 30                .BYTE <"ROW"
-6f8e 54                .BYTE <"RTI"
-6f8f 68                .BYTE <"RTS"
-6f90 c8                .BYTE <"SBC"
-6f91 88                .BYTE <"SEC"
-6f92 8a                .BYTE <"SED"
-6f93 8c                .BYTE <"SEE"
-6f94 94                .BYTE <"SEI"
-6f95 86                .BYTE <"SMB"
-6f96 44                .BYTE <"STA"
-6f97 72                .BYTE <"STX"
-6f98 74                .BYTE <"STY"
-6f99 76                .BYTE <"STZ"
-6f9a 86                .BYTE <"TAB"
-6f9b b2                .BYTE <"TAX"
-6f9c b4                .BYTE <"TAY"
-6f9d b6                .BYTE <"TAZ"
-6f9e c4                .BYTE <"TBA"
-6f9f c6                .BYTE <"TRB"
-6fa0 06                .BYTE <"TSB"
-6fa1 32                .BYTE <"TSX"
-6fa2 34                .BYTE <"TSY"
-6fa3 44                .BYTE <"TXA"
-6fa4 68                .BYTE <"TXS"
-6fa5 84                .BYTE <"TYA"
-6fa6 a8                .BYTE <"TYS"
-6fa7 c4                .BYTE <"TZA"
+6f5d 48                .BYTE <"ADC" ; 00
+6f5e ca                .BYTE <"AND" ; 01
+6f5f 1a                .BYTE <"ASL" ; 02
+6f60 26                .BYTE <"ASR" ; 03
+6f61 30                .BYTE <"ASW" ; 04
+6f62 e6                .BYTE <"BBR" ; 05
+6f63 e8                .BYTE <"BBS" ; 06
+6f64 08                .BYTE <"BCC" ; 07
+6f65 28                .BYTE <"BCS" ; 08
+6f66 a4                .BYTE <"BEQ" ; 09
+6f67 aa                .BYTE <"BIT" ; 0a
+6f68 94                .BYTE <"BMI" ; 0b
+6f69 cc                .BYTE <"BNE" ; 0c
+6f6a 5a                .BYTE <"BPL" ; 0d
+6f6b c4                .BYTE <"BRA" ; 0e
+6f6c d8                .BYTE <"BRK" ; 0f
+6f6d 26                .BYTE <"BSR" ; 10
+6f6e c8                .BYTE <"BVC" ; 11
+6f6f e8                .BYTE <"BVS" ; 12
+6f70 48                .BYTE <"CLC" ; 13
+6f71 4a                .BYTE <"CLD" ; 14
+6f72 4c                .BYTE <"CLE" ; 15
+6f73 54                .BYTE <"CLI" ; 16
+6f74 6e                .BYTE <"CLV" ; 17
+6f75 a2                .BYTE <"CMP" ; 18
+6f76 72                .BYTE <"CPX" ; 19
+6f77 74                .BYTE <"CPY" ; 1a
+6f78 76                .BYTE <"CPZ" ; 1b
+6f79 88                .BYTE <"DEC" ; 1c
+6f7a b0                .BYTE <"DEW" ; 1d
+6f7b b2                .BYTE <"DEX" ; 1e
+6f7c b4                .BYTE <"DEY" ; 1f
+6f7d b6                .BYTE <"DEZ"
+6f7e 26                .BYTE <"EOR"
+6f7f c8                .BYTE <"INC"
+6f80 f0                .BYTE <"INW"
+6f81 f2                .BYTE <"INX"
+6f82 f4                .BYTE <"INY"
+6f83 f6                .BYTE <"INZ"
+6f84 a2                .BYTE <"JMP"
+6f85 26                .BYTE <"JSR"
+6f86 44                .BYTE <"LDA"
+6f87 72                .BYTE <"LDX"
+6f88 74                .BYTE <"LDY"
+6f89 76                .BYTE <"LDZ"
+6f8a 26                .BYTE <"LSR"
+6f8b a2                .BYTE <"MAP"
+6f8c 90                .BYTE <"NEG"
+6f8d 22                .BYTE <"NOP"
+6f8e c4                .BYTE <"ORA"
+6f8f 44                .BYTE <"PHA"
+6f90 62                .BYTE <"PHP"
+6f91 70                .BYTE <"PHW"
+6f92 72                .BYTE <"PHX"
+6f93 74                .BYTE <"PHY"
+6f94 76                .BYTE <"PHZ"
+6f95 44                .BYTE <"PLA"
+6f96 62                .BYTE <"PLP"
+6f97 72                .BYTE <"PLX"
+6f98 74                .BYTE <"PLY"
+6f99 76                .BYTE <"PLZ"
+6f9a 86                .BYTE <"RMB"
+6f9b 1a                .BYTE <"ROL"
+6f9c 26                .BYTE <"ROR"
+6f9d 30                .BYTE <"ROW"
+6f9e 54                .BYTE <"RTI"
+6f9f 68                .BYTE <"RTS"
+6fa0 c8                .BYTE <"SBC"
+6fa1 88                .BYTE <"SEC"
+6fa2 8a                .BYTE <"SED"
+6fa3 8c                .BYTE <"SEE"
+6fa4 94                .BYTE <"SEI"
+6fa5 86                .BYTE <"SMB"
+6fa6 44                .BYTE <"STA"
+6fa7 72                .BYTE <"STX"
+6fa8 74                .BYTE <"STY"
+6fa9 76                .BYTE <"STZ"
+6faa 86                .BYTE <"TAB"
+6fab b2                .BYTE <"TAX"
+6fac b4                .BYTE <"TAY"
+6fad b6                .BYTE <"TAZ"
+6fae c4                .BYTE <"TBA"
+6faf c6                .BYTE <"TRB"
+6fb0 06                .BYTE <"TSB"
+6fb1 32                .BYTE <"TSX"
+6fb2 34                .BYTE <"TSY"
+6fb3 44                .BYTE <"TXA"
+6fb4 68                .BYTE <"TXS"
+6fb5 84                .BYTE <"TYA"
+6fb6 a8                .BYTE <"TYS"
+6fb7 c4                .BYTE <"TZA"
 
               *********
-6fa8          MNE_Index
+6fb8          MNE_Index
               *********
 
               ; an index for all 256 opcodes, describing
               ; where to find the 3-letter mnemonic
 
-6fa8 0f 31 15          .BYTE $0f,$31,$15,$46,$53,$31,$02,$3d
-6fb0 33 31 02          .BYTE $33,$31,$02,$55,$53,$31,$02,$05
-6fb8 0d 31 31          .BYTE $0d,$31,$31,$0d,$52,$31,$02,$3d
-6fc0 13 31 22          .BYTE $13,$31,$22,$26,$52,$31,$02,$05
-6fc8 28 01 28          .BYTE $28,$01,$28,$28,$0a,$01,$3e,$3d
-6fd0 39 01 3e          .BYTE $39,$01,$3e,$59,$0a,$01,$3e,$05
-6fd8 0b 01 01          .BYTE $0b,$01,$01,$0b,$0a,$01,$3e,$3d
-6fe0 44 01 1c          .BYTE $44,$01,$1c,$20,$0a,$01,$3e,$05
-6fe8 41 21 2f          .BYTE $41,$21,$2f,$03,$03,$21,$2d,$3d
-6ff0 32 21 2d          .BYTE $32,$21,$2d,$50,$27,$21,$2d,$05
-6ff8 11 21 21          .BYTE $11,$21,$21,$11,$03,$21,$2d,$3d
-7000 16 21 36          .BYTE $16,$21,$36,$4d,$2e,$21,$2d,$05
-7008 42 00 42          .BYTE $42,$00,$42,$10,$4c,$00,$3f,$3d
-7010 38 00 3f          .BYTE $38,$00,$3f,$5a,$27,$00,$3f,$05
-7018 12 00 00          .BYTE $12,$00,$00,$12,$4c,$00,$3f,$3d
-7020 47 00 3b          .BYTE $47,$00,$3b,$51,$27,$00,$3f,$05
-7028 0e 49 49          .BYTE $0e,$49,$49,$0e,$4b,$49,$4a,$48
-7030 1f 0a 56          .BYTE $1f,$0a,$56,$4b,$4b,$49,$4a,$06
-7038 07 49 49          .BYTE $07,$49,$49,$07,$4b,$49,$4a,$48
-7040 58 49 57          .BYTE $58,$49,$57,$4a,$4c,$49,$4c,$06
-7048 2b 29 2a          .BYTE $2b,$29,$2a,$2c,$2b,$29,$2a,$48
-7050 4f 29 4e          .BYTE $4f,$29,$4e,$2c,$2b,$29,$2a,$06
-7058 08 29 29          .BYTE $08,$29,$29,$08,$2b,$29,$2a,$48
-7060 17 29 54          .BYTE $17,$29,$54,$2c,$2b,$29,$2a,$06
-7068 1a 18 1b          .BYTE $1a,$18,$1b,$1d,$1a,$18,$1c,$48
-7070 25 18 1e          .BYTE $25,$18,$1e,$04,$1a,$18,$1c,$06
-7078 0c 18 18          .BYTE $0c,$18,$18,$0c,$1b,$18,$1c,$48
-7080 14 18 35          .BYTE $14,$18,$35,$37,$1b,$18,$1c,$06
-7088 19 43 29          .BYTE $19,$43,$29,$23,$19,$43,$22,$48
-7090 24 43 30          .BYTE $24,$43,$30,$40,$19,$43,$22,$06
-7098 09 43 43          .BYTE $09,$43,$43,$09,$34,$43,$22,$48
-70a0 45 43 3a          .BYTE $45,$43,$3a,$3c,$34,$43,$22,$06
+6fb8 0f 31 15          .BYTE $0f,$31,$15,$46,$53,$31,$02,$3d
+6fc0 33 31 02          .BYTE $33,$31,$02,$55,$53,$31,$02,$05
+6fc8 0d 31 31          .BYTE $0d,$31,$31,$0d,$52,$31,$02,$3d
+6fd0 13 31 22          .BYTE $13,$31,$22,$26,$52,$31,$02,$05
+6fd8 28 01 28          .BYTE $28,$01,$28,$28,$0a,$01,$3e,$3d
+6fe0 39 01 3e          .BYTE $39,$01,$3e,$59,$0a,$01,$3e,$05
+6fe8 0b 01 01          .BYTE $0b,$01,$01,$0b,$0a,$01,$3e,$3d
+6ff0 44 01 1c          .BYTE $44,$01,$1c,$20,$0a,$01,$3e,$05
+6ff8 41 21 2f          .BYTE $41,$21,$2f,$03,$03,$21,$2d,$3d
+7000 32 21 2d          .BYTE $32,$21,$2d,$50,$27,$21,$2d,$05
+7008 11 21 21          .BYTE $11,$21,$21,$11,$03,$21,$2d,$3d
+7010 16 21 36          .BYTE $16,$21,$36,$4d,$2e,$21,$2d,$05
+7018 42 00 42          .BYTE $42,$00,$42,$10,$4c,$00,$3f,$3d
+7020 38 00 3f          .BYTE $38,$00,$3f,$5a,$27,$00,$3f,$05
+7028 12 00 00          .BYTE $12,$00,$00,$12,$4c,$00,$3f,$3d
+7030 47 00 3b          .BYTE $47,$00,$3b,$51,$27,$00,$3f,$05
+7038 0e 49 49          .BYTE $0e,$49,$49,$0e,$4b,$49,$4a,$48
+7040 1f 0a 56          .BYTE $1f,$0a,$56,$4b,$4b,$49,$4a,$06
+7048 07 49 49          .BYTE $07,$49,$49,$07,$4b,$49,$4a,$48
+7050 58 49 57          .BYTE $58,$49,$57,$4a,$4c,$49,$4c,$06
+7058 2b 29 2a          .BYTE $2b,$29,$2a,$2c,$2b,$29,$2a,$48
+7060 4f 29 4e          .BYTE $4f,$29,$4e,$2c,$2b,$29,$2a,$06
+7068 08 29 29          .BYTE $08,$29,$29,$08,$2b,$29,$2a,$48
+7070 17 29 54          .BYTE $17,$29,$54,$2c,$2b,$29,$2a,$06
+7078 1a 18 1b          .BYTE $1a,$18,$1b,$1d,$1a,$18,$1c,$48
+7080 25 18 1e          .BYTE $25,$18,$1e,$04,$1a,$18,$1c,$06
+7088 0c 18 18          .BYTE $0c,$18,$18,$0c,$1b,$18,$1c,$48
+7090 14 18 35          .BYTE $14,$18,$35,$37,$1b,$18,$1c,$06
+7098 19 43 29          .BYTE $19,$43,$29,$23,$19,$43,$22,$48
+70a0 24 43 30          .BYTE $24,$43,$30,$40,$19,$43,$22,$06
+70a8 09 43 43          .BYTE $09,$43,$43,$09,$34,$43,$22,$48
+70b0 45 43 3a          .BYTE $45,$43,$3a,$3c,$34,$43,$22,$06
 
               *****
-70a8          BRAIN
+70b8          BRAIN
               *****
 
               ;              index values for branch mnemonics
 
               ;              BCC BCS BEQ BMI BNE BPL BRA BSR BVC BVS
-70a8 07 08 09          .BYTE $07,$08,$09,$0b,$0c,$0d,$0e,$10,$11,$12
+70b8 07 08 09          .BYTE $07,$08,$09,$0b,$0c,$0d,$0e,$10,$11,$12
 
               *******
-70b2          LEN_ADM
+70c2          LEN_ADM
               *******
 
               ; a table of instruction length, flags
@@ -3104,41 +3118,41 @@ fff0          PLOT       = $fff0
               ; 3-0: index of address mode
 
 
-70b2 00 44 00          .BYTE $00,$44,$00,$00,$40,$40,$40,$40 ; $00
-70ba 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $08
-70c2 60 45 46          .BYTE $60,$45,$46,$a0,$40,$47,$47,$40 ; $10
-70ca 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $18
-70d2 80 44 8b          .BYTE $80,$44,$8b,$84,$40,$40,$40,$40 ; $20
-70da 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $28
-70e2 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $30
-70ea 00 88 00          .BYTE $00,$88,$00,$00,$87,$87,$87,$c0 ; $38
-70f2 00 44 00          .BYTE $00,$44,$00,$00,$40,$40,$40,$40 ; $40
-70fa 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $48
-7102 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $50
-710a 00 88 00          .BYTE $00,$88,$00,$00,$00,$87,$87,$c0 ; $58
-7112 00 44 41          .BYTE $00,$44,$41,$a0,$40,$40,$40,$40 ; $60
-711a 00 41 00          .BYTE $00,$41,$00,$00,$8b,$80,$80,$c0 ; $68
-7122 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $70
-712a 00 88 00          .BYTE $00,$88,$00,$00,$84,$87,$87,$c0 ; $78
-7132 60 44 4d          .BYTE $60,$44,$4d,$a0,$40,$40,$40,$40 ; $80
-713a 00 41 00          .BYTE $00,$41,$00,$87,$80,$80,$80,$c0 ; $88
-7142 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$48,$40 ; $90
-714a 00 88 00          .BYTE $00,$88,$00,$88,$80,$87,$87,$c0 ; $98
-7152 41 44 41          .BYTE $41,$44,$41,$41,$40,$40,$40,$40 ; $a0
-715a 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $a8
-7162 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$48,$40 ; $b0
-716a 00 88 00          .BYTE $00,$88,$00,$87,$87,$87,$88,$c0 ; $b8
-7172 41 44 41          .BYTE $41,$44,$41,$40,$40,$40,$40,$40 ; $c0
-717a 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $c8
-7182 60 45 46          .BYTE $60,$45,$46,$a0,$40,$47,$47,$40 ; $d0
-718a 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $d8
-7192 41 44 4d          .BYTE $41,$44,$4d,$40,$40,$40,$40,$40 ; $e0
-719a 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $e8
-71a2 60 45 46          .BYTE $60,$45,$46,$a0,$81,$47,$47,$40 ; $f0
-71aa 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $f8
+70c2 00 44 00          .BYTE $00,$44,$00,$00,$40,$40,$40,$40 ; $00
+70ca 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $08
+70d2 60 45 46          .BYTE $60,$45,$46,$a0,$40,$47,$47,$40 ; $10
+70da 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $18
+70e2 80 44 8b          .BYTE $80,$44,$8b,$84,$40,$40,$40,$40 ; $20
+70ea 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $28
+70f2 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $30
+70fa 00 88 00          .BYTE $00,$88,$00,$00,$87,$87,$87,$c0 ; $38
+7102 00 44 00          .BYTE $00,$44,$00,$00,$40,$40,$40,$40 ; $40
+710a 00 41 00          .BYTE $00,$41,$00,$00,$80,$80,$80,$c0 ; $48
+7112 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $50
+711a 00 88 00          .BYTE $00,$88,$00,$00,$00,$87,$87,$c0 ; $58
+7122 00 44 41          .BYTE $00,$44,$41,$a0,$40,$40,$40,$40 ; $60
+712a 00 41 00          .BYTE $00,$41,$00,$00,$8b,$80,$80,$c0 ; $68
+7132 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$47,$40 ; $70
+713a 00 88 00          .BYTE $00,$88,$00,$00,$84,$87,$87,$c0 ; $78
+7142 60 44 4d          .BYTE $60,$44,$4d,$a0,$40,$40,$40,$40 ; $80
+714a 00 41 00          .BYTE $00,$41,$00,$87,$80,$80,$80,$c0 ; $88
+7152 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$48,$40 ; $90
+715a 00 88 00          .BYTE $00,$88,$00,$88,$80,$87,$87,$c0 ; $98
+7162 41 44 41          .BYTE $41,$44,$41,$41,$40,$40,$40,$40 ; $a0
+716a 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $a8
+7172 60 45 46          .BYTE $60,$45,$46,$a0,$47,$47,$48,$40 ; $b0
+717a 00 88 00          .BYTE $00,$88,$00,$87,$87,$87,$88,$c0 ; $b8
+7182 41 44 41          .BYTE $41,$44,$41,$40,$40,$40,$40,$40 ; $c0
+718a 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $c8
+7192 60 45 46          .BYTE $60,$45,$46,$a0,$40,$47,$47,$40 ; $d0
+719a 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $d8
+71a2 41 44 4d          .BYTE $41,$44,$4d,$40,$40,$40,$40,$40 ; $e0
+71aa 00 41 00          .BYTE $00,$41,$00,$80,$80,$80,$80,$c0 ; $e8
+71b2 60 45 46          .BYTE $60,$45,$46,$a0,$81,$47,$47,$40 ; $f0
+71ba 00 88 00          .BYTE $00,$88,$00,$00,$80,$87,$87,$c0 ; $f8
 
               ******
-71b2          ADMODE
+71c2          ADMODE
               ******
 
               ; printout flags for 16 address modes
@@ -3152,76 +3166,76 @@ fff0          PLOT       = $fff0
               ;            2       x    ,
               ;            1/0      xx  01:X  10:Y  11:Z
 
-71b2 00                .BYTE %00000000 ; 0             implicit/direct
-71b3 80                .BYTE %10000000 ; 1 #$nn        immediate
-71b4 00                .BYTE %00000000 ; 2             ----------
-71b5 00                .BYTE %00000000 ; 3             ----------
-71b6 69                .BYTE %01101001 ; 4 ($nn,X)     indirect X
-71b7 4e                .BYTE %01001110 ; 5 ($nn),Y     indirect Y
-71b8 4f                .BYTE %01001111 ; 6 ($nn),Z     indirect Z
-71b9 05                .BYTE %00000101 ; 7 $nn,X       indexed  X
-71ba 06                .BYTE %00000110 ; 8 $nn,Y       indexed  Y
-71bb 05                .BYTE %00000101 ; 9 $nn,X       indexed  X
-71bc 06                .BYTE %00000110 ; a $nn,Y       ----------
-71bd 48                .BYTE %01001000 ; b ($nnnn,X)   JMP & JSR
-71be 69                .BYTE %01101001 ; c ($nn,X)     ----------
-71bf 7e                .BYTE %01111110 ; d ($nn,SP),Y  LDA & STA
-71c0 00                .BYTE %00000000 ; e
-71c1 04                .BYTE %00000100 ; f
+71c2 00                .BYTE %00000000 ; 0             implicit/direct
+71c3 80                .BYTE %10000000 ; 1 #$nn        immediate
+71c4 00                .BYTE %00000000 ; 2             ----------
+71c5 00                .BYTE %00000000 ; 3             ----------
+71c6 69                .BYTE %01101001 ; 4 ($nn,X)     indirect X
+71c7 4e                .BYTE %01001110 ; 5 ($nn),Y     indirect Y
+71c8 4f                .BYTE %01001111 ; 6 ($nn),Z     indirect Z
+71c9 05                .BYTE %00000101 ; 7 $nn,X       indexed  X
+71ca 06                .BYTE %00000110 ; 8 $nn,Y       indexed  Y
+71cb 05                .BYTE %00000101 ; 9 $nn,X       indexed  X
+71cc 06                .BYTE %00000110 ; a $nn,Y       ----------
+71cd 48                .BYTE %01001000 ; b ($nnnn,X)   JMP & JSR
+71ce 69                .BYTE %01101001 ; c ($nn,X)     ----------
+71cf 7e                .BYTE %01111110 ; d ($nn,SP),Y  LDA & STA
+71d0 00                .BYTE %00000000 ; e
+71d1 04                .BYTE %00000100 ; f
 
               ;              ASL INC ROL DEC LSR ROR NEG ASR
-71c2 0a 1a 2a ACCUMODE .BYTE $0a,$1a,$2a,$3a,$4a,$6a,$42,$43
+71d2 0a 1a 2a ACCUMODE .BYTE $0a,$1a,$2a,$3a,$4a,$6a,$42,$43
 
-71ca 10 0a 08 Num_Base .BYTE 16,10, 8, 2 ; hex, dec, oct, bin
-71ce 04 03 03 Num_Bits .BYTE  4, 3, 3, 1 ; hex, dec, oct, bin
+71da 10 0a 08 Num_Base .BYTE 16,10, 8, 2 ; hex, dec, oct, bin
+71de 04 03 03 Num_Bits .BYTE  4, 3, 3, 1 ; hex, dec, oct, bin
 
-71d2 58 59 5a Index_Char .BYTE "XYZ"
+71e2 58 59 5a Index_Char .BYTE "XYZ"
 
               ;                0123456789abcd
-71d5 55 31 3a U1        .BYTE "U1:9 0 000 000",0 ; channel 9, drive, track, sector
-71e4 42 2d 50 BP_ZERO   .BYTE "B-P 9 0",0        ; set buffer pointer to 0
+71e5 55 31 3a U1        .BYTE "U1:9 0 000 000",0 ; channel 9, drive, track, sector
+71f4 42 2d 50 BP_ZERO   .BYTE "B-P 9 0",0        ; set buffer pointer to 0
 
               ***************
               Module Reg_Text
               ***************
-71ec 20 7d ff          JSR  PRIMM
-71ef 0d 20 20          .BYTE "\r    PC   SR AC XR YR ZR BP  SP  NVEBDIZC\r; \eQ",0
-721e 60                RTS
-721f          EndMod [Reg_Text] Size = 51 [$33]
+71fc 20 7d ff          JSR  PRIMM
+71ff 0d 20 20          .BYTE "\r    PC   SR AC XR YR ZR BP  SP  NVEBDIZC\r; \eQ",0
+722e 60                RTS
+722f          EndMod [Reg_Text] Size = 51 [$33]
 
               ***************
               Module Mon_Help
               ***************
-721f 20 7d ff    JSR PRIMM
+722f 20 7d ff    JSR PRIMM
 
-7222 96 41 05    .BYTE LRED,"A",WHITE,"SSEMBLE     - A ADDRESS MNEMONIC OPERAND",CR
-724e 96 42 05    .BYTE LRED,"B",WHITE,"ITMAPS      - B [FROM [TO]]",CR
-726d 96 43 05    .BYTE LRED,"C",WHITE,"OMPARE      - C FROM TO WITH",CR
-728d 96 44 05    .BYTE LRED,"D",WHITE,"ISASSEMBLE  - D [FROM [TO]]",CR
-72ac 96 46 05    .BYTE LRED,"F",WHITE,"ILL         - F FROM TO FILLBYTE",CR
-72d0 96 47 05    .BYTE LRED,"G",WHITE,"O           - G [ADDRESS]",CR
-72ed 96 48 05    .BYTE LRED,"H",WHITE,"UNT         - H FROM TO (STRING OR BYTES)",CR
-731a 96 4a 05    .BYTE LRED,"J",WHITE,"SR          - J ADDRESS",CR
-7335 96 4c 05    .BYTE LRED,"L",WHITE,"OAD         - L FILENAME [UNIT [ADDRESS]]",CR
-7362 96 4d 05    .BYTE LRED,"M",WHITE,"EMORY       - M [FROM [TO]]",CR
-7381 96 52 05    .BYTE LRED,"R",WHITE,"EGISTERS    - R",CR
-7394 96 53 05    .BYTE LRED,"S",WHITE,"AVE         - S FILENAME UNIT FROM TO",CR
-73bd 96 54 05    .BYTE LRED,"T",WHITE,"RANSFER     - T FROM TO TARGET",CR
-73df 96 56 05    .BYTE LRED,"V",WHITE,"ERIFY       - V FILENAME [UNIT [ADDRESS]]",CR
-740c 45 96 58    .BYTE "E",LRED,"X",WHITE,"IT         - X",CR
-741f 96 2e 05    .BYTE LRED,".",WHITE,"<DOT>       - . ADDRESS MNEMONIC OPERAND",CR
-744b 96 3e 05    .BYTE LRED,">",WHITE,"<GREATER>   - > ADDRESS BYTE SEQUENCE",CR
-7474 96 3b 05    .BYTE LRED,";",WHITE,"<SEMICOLON> - ; REGISTER CONTENTS",CR
-7499 96 40 05    .BYTE LRED,"@",WHITE,"DOS         - @ [DOS COMMAND]",CR
-74ba 96 3f 05    .BYTE LRED,"?",WHITE,"HELP        - ?",CR
-74cd 00          .BYTE 0
-74ce 4c a5 60    JMP Main
-74d1          End_Mod
+7232 96 41 05    .BYTE LRED,"A",WHITE,"SSEMBLE     - A ADDRESS MNEMONIC OPERAND",CR
+725e 96 42 05    .BYTE LRED,"B",WHITE,"ITMAPS      - B [FROM [TO]]",CR
+727d 96 43 05    .BYTE LRED,"C",WHITE,"OMPARE      - C FROM TO WITH",CR
+729d 96 44 05    .BYTE LRED,"D",WHITE,"ISASSEMBLE  - D [FROM [TO]]",CR
+72bc 96 46 05    .BYTE LRED,"F",WHITE,"ILL         - F FROM TO FILLBYTE",CR
+72e0 96 47 05    .BYTE LRED,"G",WHITE,"O           - G [ADDRESS]",CR
+72fd 96 48 05    .BYTE LRED,"H",WHITE,"UNT         - H FROM TO (STRING OR BYTES)",CR
+732a 96 4a 05    .BYTE LRED,"J",WHITE,"SR          - J ADDRESS",CR
+7345 96 4c 05    .BYTE LRED,"L",WHITE,"OAD         - L FILENAME [UNIT [ADDRESS]]",CR
+7372 96 4d 05    .BYTE LRED,"M",WHITE,"EMORY       - M [FROM [TO]]",CR
+7391 96 52 05    .BYTE LRED,"R",WHITE,"EGISTERS    - R",CR
+73a4 96 53 05    .BYTE LRED,"S",WHITE,"AVE         - S FILENAME UNIT FROM TO",CR
+73cd 96 54 05    .BYTE LRED,"T",WHITE,"RANSFER     - T FROM TO TARGET",CR
+73ef 96 56 05    .BYTE LRED,"V",WHITE,"ERIFY       - V FILENAME [UNIT [ADDRESS]]",CR
+741c 45 96 58    .BYTE "E",LRED,"X",WHITE,"IT         - X",CR
+742f 96 2e 05    .BYTE LRED,".",WHITE,"<DOT>       - . ADDRESS MNEMONIC OPERAND",CR
+745b 96 3e 05    .BYTE LRED,">",WHITE,"<GREATER>   - > ADDRESS BYTE SEQUENCE",CR
+7484 96 3b 05    .BYTE LRED,";",WHITE,"<SEMICOLON> - ; REGISTER CONTENTS",CR
+74a9 96 40 05    .BYTE LRED,"@",WHITE,"DOS         - @ [DOS COMMAND]",CR
+74ca 96 3f 05    .BYTE LRED,"?",WHITE,"HELP        - ?",CR
+74dd 00          .BYTE 0
+74de 4c a5 60    JMP Main
+74e1          End_Mod
 
-74d1 ff ff ff          .FILL $8000-* ($ff) ; 3749 bytes ; 2863 bytes
+74e1 ff ff ff          .FILL $8000-* ($ff) ; 3749 bytes ; 2847 bytes
 
 
-  445 Symbols
+  447 Symbols
 -------------
 Bank                           $0002    28D   284    287    343    351
                                        522    524    527    774
@@ -3229,11 +3243,11 @@ PCH                            $0003    29D   272    280    315
 PCL                            $0004    30D   278    281    313
 SR                             $0005    31D   367
 WHITE                          $0005    14D   470    736    744    888
-                                       902   1815   2105   3198   3199
-                                      3200   3201   3202   3203   3204
-                                      3205   3206   3207   3208   3209
-                                      3210   3211   3212   3213   3214
-                                      3215   3216   3217
+                                       902   1815   2105   3212   3213
+                                      3214   3215   3216   3217   3218
+                                      3219   3220   3221   3222   3223
+                                      3224   3225   3226   3227   3228
+                                      3229   3230   3231
 AC                             $0006    32D   301
 XR                             $0007    33
 YR                             $0008    34
@@ -3242,11 +3256,11 @@ BP                             $000a    41
 SPH                            $000b    42D   325    359
 SPL                            $000c    43D   327    361    814    825
                                        829
-CR                             $000d    18D   397    451   1505   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
+CR                             $000d    18D   397    451   1505   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
 REV                            $0012    19D   451
 CRIGHT                         $001d    20D   428
 QUOTE                          $0022    21D  1050   1057
@@ -3266,17 +3280,17 @@ Long_AC                        $0059    56D   208    210    218    222
                                       1943   1946   1951   1954   2003
                                       2004   2005   2006   2013   2047
                                       2054   2055   2056   2067   2068
-                                      2075   2076   2078   2080   2539
-                                      2578   2579   2580   2581   2617
-                                      2622
+                                      2075   2076   2078   2080   2322
+                                      2553   2592   2593   2594   2595
+                                      2631   2636
 Long_CT                        $005d    57D   211    212    214    215
                                        219    223    552    581    598
                                        695    696    699   1403   1409
                                       1417   1418   1623   1635   1638
                                       2235   2236   2238   2239   2240
-                                      2340   2341   2383   2384   2385
-                                      2408   2422   2425   2444   2459
-                                      2627   2645
+                                      2354   2355   2397   2398   2399
+                                      2422   2436   2439   2458   2473
+                                      2641   2659
 Long_PC                        $0061    58D   538    597    613    646
                                        648    671    673    748    792
                                        794    838    840    856    858
@@ -3285,11 +3299,11 @@ Long_PC                        $0061    58D   538    597    613    646
                                       1476   1485   1491   1513   1517
                                       1551   1554   1952   1955   2097
                                       2103   2108   2111   2112   2249
-                                      2250   2257   2259   2334   2347
-                                      2350   2364   2377   2386   2387
-                                      2388   2389   2390   2391   2392
-                                      2393   2394   2395   2396   2397
-                                      2413   2414   2415   2725   2742
+                                      2250   2257   2259   2348   2361
+                                      2364   2378   2391   2400   2401
+                                      2402   2403   2404   2405   2406
+                                      2407   2408   2409   2410   2411
+                                      2427   2428   2429   2739   2756
 Long_DA                        $0065    59D   566    656    657    659
                                        660    715    718    721    737
                                        745    746    929    931   1010
@@ -3320,22 +3334,22 @@ Dig_Cnt                        $006e    71D  2002   2014   2041   2089
 Buf_Index                      $006f    72D   401   1053   1066   1251
                                       1968   1989   2015   2024   2195
                                       2196   2206   2214   2215   2293
-                                      2440   2441   2536   2545   2610
-STATUS                         $0090    77D  1041   1098   2568   2573
-                                      2587   2684   2723   2741   2801
-                                      2809   2819   2825
+                                      2454   2455   2550   2559   2624
+STATUS                         $0090    77D  1041   1098   2582   2587
+                                      2601   2698   2737   2755   2815
+                                      2823   2833   2839
 VERCK                          $0093    78D   437   1082   1091   1099
-LRED                           $0096    16D   744    886    900   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
+LRED                           $0096    16D   744    886    900   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
 YELLOW                         $009e    15D   451   1737   2099
 FNLEN                          $00b7    79D  1039   1060
-SA                             $00b9    80D  1036   1086   1109   2565
-FA                             $00ba    81D  1034   1072   2449   2470
-                                      2544   2562   2679   2718   2736
-                                      2802   2820
+SA                             $00b9    80D  1036   1086   1109   2579
+FA                             $00ba    81D  1034   1072   2463   2484
+                                      2558   2576   2693   2732   2750
+                                      2816   2834
 FNADR                          $00bb    82D  1043   1045   1059
 BA                             $00bd    83D  1038   1076
 FNBANK                         $00be    84D  1040
@@ -3348,7 +3362,7 @@ R_Margin                       $00e7    92
 QTSW                           $00f4    94D   854
 Buffer                         $0200    96D   393    402   1054   1508
                                       1510   1519   1523   1531   2197
-                                      2216   2442   2453
+                                      2216   2456   2467
 IIRQ                           $0314    98
 IBRK                           $0316    99
 EXMON                          $032e   100
@@ -3361,15 +3375,15 @@ Op_Ix                          $0406   107D  1142   1244   1247   1290
 Op_Len                         $0407   108D  1143   1246   1446   1452
                                       1455   1603
 Disk_Unit                      $0408   109D  1033
-Disk_Track                     $0409   110D  2618   2665   2788
-Disk_Sector                    $040a   111D  2623   2644   2664   2791
-Disk_Status                    $040b   112D  2480   2484   2485   2496
-                                      2671
+Disk_Track                     $0409   110D  2632   2679   2802
+Disk_Sector                    $040a   111D  2637   2658   2678   2805
+Disk_Status                    $040b   112D  2494   2498   2499   2510
+                                      2685
 Mon_Data                       $040c   114D   993   1003   1015   1042
-                                      1044   2609   2631   2706   2759
-                                      2764   2768   2782   2787
-Disk_Msg                       $0434   115D  2475   2482   2490   2494
-                                      2512
+                                      1044   2623   2645   2720   2773
+                                      2778   2782   2796   2801
+Disk_Msg                       $0434   115D  2489   2496   2504   2508
+                                      2526
 header                         $1fff   167
 Link                           $2029   179D   171
 header_loop                    $205a   218D   221    225
@@ -3393,7 +3407,7 @@ Main                           $60a5   380D   404    431    707    761
                                        778    805    830    939    951
                                        976   1022   1026   1089   1101
                                       1104   1128   1147   1630   1640
-                                      2309   2555   2650   3219
+                                      2309   2569   2664   3233
 Main_A                         $60aa   389D  1536
 Main_loop                      $60aa   392D   398
 Main_getcomm                   $60c0   403D   406
@@ -3408,8 +3422,8 @@ Mon_Error                      $60d3   422D   396    691    917    919
                                       1358   1367   1374   1381   1383
                                       1386   1398   1402   1404   1431
                                       1447   1449   1626   1984   2295
-                                      2541   2543   2606   2608   2612
-                                      2616   2621
+                                      2555   2557   2620   2622   2626
+                                      2630   2635
 Mon_Select                     $60e0   434D   415
 Print_Commands                 $60ed   447D   262    295
 Command_Char                   $6107   454D   414
@@ -3420,9 +3434,9 @@ Mon_Exit                       $614f   502D   488
 LAC_To_PC                      $6152   508D   769    813    824
 LAC_To_PC_error                $6162   528D   520
 LAC_To_LPC                     $6163   532D   686    734    787   1075
-                                      1137   1619   2276   2362   2613
+                                      1137   1619   2276   2376   2627
 LAC_To_LPC_loop                $6166   537D   540
-LAC_To_LCT                     $616f   546D  1250   2332   2374   2626
+LAC_To_LCT                     $616f   546D  1250   2346   2388   2640
 LAC_To_LCT_loop                $6172   551D   554
 LAC_To_LDA                     $617b   560D  2279
 LAC_To_LDA_loop                $617e   565D   568
@@ -3613,13 +3627,13 @@ Get_LAC                        $6a3b  1972D   683    687    732    768
                                        771    785    789    812    823
                                        918    960   1005   1069   1073
                                       1077   1119   1135   1617   1620
-                                      2274   2277   2294   2611   2615
-                                      2620   2625
+                                      2274   2277   2294   2625   2629
+                                      2634   2639
 Get_LAC_error                  $6a4f  1984D  1976
 Get_LAC_noval                  $6a52  1986D  1977
 Get_LAC_end                    $6a54  1989D  1979
 Get_LAC_ok                     $6a56  1990D  1981   1983
-Read_Number                    $6a58  1995D  1235   1975   2537
+Read_Number                    $6a58  1995D  1235   1975   2551
 Read_Number_numeric            $6a7b  2018D  2011
 Read_Number_prefix             $6a7d  2019D  2022
 Read_Number_digit              $6a88  2026D  2020   2077   2079   2081
@@ -3639,30 +3653,30 @@ Hex_LPC_laba                   $6b0b  2108D  2098
 Hex_LPC_labb                   $6b12  2111D  2107   2109
 Print_XA_Hex                   $6b16  2116D  1958
 Print_Hex_Blank                $6b1c  2126D   352    362    841   1719
-Print_Blank                    $6b1f  2133D  1813   1814   2583
+Print_Blank                    $6b1f  2133D  1813   1814   2597
 Print_CR                       $6b24  2141D   383    735    756    877
-                                       962   1011   1079   1121   2510
-                                      2517   2592
+                                       962   1011   1079   1121   2524
+                                      2531   2606
 CR_Erase                       $6b29  2149D  1628   2298
 Print_Hex                      $6b31  2158D   344    360   1870   1879
                                       2102   2104   2110   2121   2129
 A_To_Hex                       $6b3d  2170D  1518   2162
 A_To_Hex_nibble                $6b47  2182D  2174
 A_To_Hex_lab                   $6b4f  2186D  2184
-Get_Glyph                      $6b52  2191D  2008   2531
+Get_Glyph                      $6b52  2191D  2008   2545
 Get_Glyph_loop                 $6b55  2195D  2198
 Got_Char                       $6b5f  2203D  1978
 Get_Char                       $6b61  2210D   403    986    989    995
                                       1046   1067   1144   1215   1227
-                                      1253   1310   2012   2026   2546
-                                      2604
+                                      1253   1310   2012   2026   2560
+                                      2618
 Get_Char_regc                  $6b76  2224D  2219
 Get_Char_return                $6b7c  2227D  2221   2223   2225
 Dec_LCT                        $6b7d  2232D   937    949    974   1024
                                       1126
 Dec_LCT_skip                   $6b85  2239D  2237
 Add_LPC                        $6b8a  2245D   907   1498   1634   1675
-Inc_LPC_Page                   $6b91  2254D  2643
+Inc_LPC_Page                   $6b91  2254D  2657
 Add_LPC_return                 $6b97  2260D  2251   2258
 Param_Range                    $6b98  2263D   916    958    983   1117
 Param_Range_error              $6baf  2284D  2275   2278   2281
@@ -3670,84 +3684,86 @@ Converter                      $6bb1  2289D   494    495    496    497
                                        498
 Converter_loop                 $6bbd  2297D  2308
 Conv_Tab                       $6bd6  2311D  2304
-Print_Dual                     $6bde  2318D  2314
-Print_Octal                    $6be4  2326D  2313
-Print_Dual_entry               $6be8  2332D  2323
-Print_Dual_loopa               $6bf2  2337D  2353
-Print_Dual_loopb               $6bf6  2340D  2344
-Print_Dual_skip                $6c07  2349D  2346
-Print_Dual_next                $6c0e  2352D  2348
-Print_Hexval                   $6c13  2359D  2311
-Print_Decimal                  $6c1c  2369D  2312   2582
-Print_Decimal_clear            $6c23  2377D  2379
-Print_Decimal_loop             $6c2b  2383D  2399
-Print_BCD                      $6c4e  2404D  2365
-Print_BCD_loopa                $6c56  2411D  2431
-Print_BCD_loopb                $6c5a  2413D  2418
-Print_BCD_skip                 $6c6d  2424D  2421
-Print_BCD_print                $6c77  2429D  2427
-Print_BCD_next                 $6c7a  2430D  2423
-Mon_Disk                       $6c7e  2437D  2554
-Mon_Disk_lab                   $6c91  2449D  2447
-Mon_Disk_loop                  $6c9a  2453D  2457
-Mon_Disk_close                 $6ca5  2458D  2454
-Get_Disk_Status                $6cb1  2467D  2504   2659   2668
-Get_Disk_Status_loop           $6cd8  2488D  2492
-Print_Disk_Status              $6cef  2501D  2443   2461   2810   2826
-Print_Disk_Msg                 $6cf2  2507D  2648   2670
-Print_Disk_Status_loop         $6cf7  2512D  2516
-Print_Disk_Status_exit         $6d02  2517D  2513
-Mon_DOS                        $6d05  2527D   489
-Mon_DOS_unit                   $6d25  2544D  2533   2535   2538
-Mon_DOS_next                   $6d29  2546D  2549   2551
-Mon_DOS_status                 $6d3a  2554D  2547
-Directory                      $6d40  2559D  2462
-Directory_loopb                $6d52  2571D  2576   2596
-Directory_loopc                $6d6b  2585D  2590
-Directory_cr                   $6d79  2592D  2586
-Directory_exit                 $6d85  2597D  2574   2588   2594
-DOS_U                          $6d88  2601D  2553
-DOS_U_loop                     $6dc4  2631D  2646
-DOS_U_write                    $6dd4  2639D  2633
-DOS_U_next                     $6ddc  2643D  2637
-DOS_U_error                    $6de6  2648D  2635   2641
-Find_Next_Sector               $6def  2654D  2634   2640
-Find_Next_Sector_error         $6e11  2670D  2662
-Find_Next_Sector_return        $6e17  2672D  2660   2669
-Open_Command_Channel           $6e18  2676D  2692   2705
-Reset_BP                       $6e27  2689D  2735
-Reset_BP_loop                  $6e2a  2693D  2697
-Reset_BP_end                   $6e35  2698D  2694
-Send_Disk_Command              $6e38  2702D  2658   2667
-Send_Disk_Command_loop         $6e3b  2706D  2710
-Send_Disk_Command_end          $6e46  2711D  2707
-Read_Sector                    $6e49  2715D  2636
-Read_Sector_loop               $6e57  2724D  2727
-Write_Sector                   $6e63  2732D  2639
-Write_Sector_loop              $6e74  2742D  2745
-Set_TS_100                     $6e81  2757D  2761
-Set_TS                         $6e81  2751D  2790   2793
-Set_TS_10                      $6e8c  2762D  2758   2766
-Set_TS_1                       $6e97  2767D  2763
-Build_U_String                 $6e9d  2777D  2657   2666
-Build_U_String_loop            $6e9f  2781D  2785
-Open_Disk_Buffer               $6ebf  2797D  2629
-Close_Disk_Buffer              $6edb  2815D  2649
-MNE_L                          $6ef2  2847D  1187   1751
-MNE_R                          $6f4d  2943D  1189   1753
-MNE_Index                      $6fa8  3039D  1202   1574   1750
-BRAIN                          $70a8  3079D  1422
-LEN_ADM                        $70b2  3088D  1567   1695   1740   1862
-ADMODE                         $71b2  3142D  1589   1699
-ACCUMODE                       $71c2  3174D  1824
-Num_Base                       $71ca  3176D  2038
-Num_Bits                       $71ce  3177D  2053
-Index_Char                     $71d2  3179D  1915
-U1                             $71d5  3182D  2781
-BP_ZERO                        $71e4  3183D  2693
-Reg_Text                       $71ec  3186D   338
-Mon_Help                       $721f  3194D   493
-End_Mod                        $74d1  3220
+Print_Char                     $6be0  2319D  2315
+Print_Char_return              $6bed  2328D  2324   2326
+Print_Dual                     $6bee  2332D  2314
+Print_Octal                    $6bf4  2340D  2313
+Print_Dual_entry               $6bf8  2346D  2337
+Print_Dual_loopa               $6c02  2351D  2367
+Print_Dual_loopb               $6c06  2354D  2358
+Print_Dual_skip                $6c17  2363D  2360
+Print_Dual_next                $6c1e  2366D  2362
+Print_Hexval                   $6c23  2373D  2311
+Print_Decimal                  $6c2c  2383D  2312   2596
+Print_Decimal_clear            $6c33  2391D  2393
+Print_Decimal_loop             $6c3b  2397D  2413
+Print_BCD                      $6c5e  2418D  2379
+Print_BCD_loopa                $6c66  2425D  2445
+Print_BCD_loopb                $6c6a  2427D  2432
+Print_BCD_skip                 $6c7d  2438D  2435
+Print_BCD_print                $6c87  2443D  2441
+Print_BCD_next                 $6c8a  2444D  2437
+Mon_Disk                       $6c8e  2451D  2568
+Mon_Disk_lab                   $6ca1  2463D  2461
+Mon_Disk_loop                  $6caa  2467D  2471
+Mon_Disk_close                 $6cb5  2472D  2468
+Get_Disk_Status                $6cc1  2481D  2518   2673   2682
+Get_Disk_Status_loop           $6ce8  2502D  2506
+Print_Disk_Status              $6cff  2515D  2457   2475   2824   2840
+Print_Disk_Msg                 $6d02  2521D  2662   2684
+Print_Disk_Status_loop         $6d07  2526D  2530
+Print_Disk_Status_exit         $6d12  2531D  2527
+Mon_DOS                        $6d15  2541D   489
+Mon_DOS_unit                   $6d35  2558D  2547   2549   2552
+Mon_DOS_next                   $6d39  2560D  2563   2565
+Mon_DOS_status                 $6d4a  2568D  2561
+Directory                      $6d50  2573D  2476
+Directory_loopb                $6d62  2585D  2590   2610
+Directory_loopc                $6d7b  2599D  2604
+Directory_cr                   $6d89  2606D  2600
+Directory_exit                 $6d95  2611D  2588   2602   2608
+DOS_U                          $6d98  2615D  2567
+DOS_U_loop                     $6dd4  2645D  2660
+DOS_U_write                    $6de4  2653D  2647
+DOS_U_next                     $6dec  2657D  2651
+DOS_U_error                    $6df6  2662D  2649   2655
+Find_Next_Sector               $6dff  2668D  2648   2654
+Find_Next_Sector_error         $6e21  2684D  2676
+Find_Next_Sector_return        $6e27  2686D  2674   2683
+Open_Command_Channel           $6e28  2690D  2706   2719
+Reset_BP                       $6e37  2703D  2749
+Reset_BP_loop                  $6e3a  2707D  2711
+Reset_BP_end                   $6e45  2712D  2708
+Send_Disk_Command              $6e48  2716D  2672   2681
+Send_Disk_Command_loop         $6e4b  2720D  2724
+Send_Disk_Command_end          $6e56  2725D  2721
+Read_Sector                    $6e59  2729D  2650
+Read_Sector_loop               $6e67  2738D  2741
+Write_Sector                   $6e73  2746D  2653
+Write_Sector_loop              $6e84  2756D  2759
+Set_TS                         $6e91  2765D  2804   2807
+Set_TS_100                     $6e91  2771D  2775
+Set_TS_10                      $6e9c  2776D  2772   2780
+Set_TS_1                       $6ea7  2781D  2777
+Build_U_String                 $6ead  2791D  2671   2680
+Build_U_String_loop            $6eaf  2795D  2799
+Open_Disk_Buffer               $6ecf  2811D  2643
+Close_Disk_Buffer              $6eeb  2829D  2663
+MNE_L                          $6f02  2861D  1187   1751
+MNE_R                          $6f5d  2957D  1189   1753
+MNE_Index                      $6fb8  3053D  1202   1574   1750
+BRAIN                          $70b8  3093D  1422
+LEN_ADM                        $70c2  3102D  1567   1695   1740   1862
+ADMODE                         $71c2  3156D  1589   1699
+ACCUMODE                       $71d2  3188D  1824
+Num_Base                       $71da  3190D  2038
+Num_Bits                       $71de  3191D  2053
+Index_Char                     $71e2  3193D  1915
+U1                             $71e5  3196D  2795
+BP_ZERO                        $71f4  3197D  2707
+Reg_Text                       $71fc  3200D   338
+Mon_Help                       $722f  3208D   493
+End_Mod                        $74e1  3234
 EXIT_OLD                       $cf2e   117D   311    312
 EXIT                           $cfa4   118D   268    307    308    309
 SETBNK                         $ff6b   120
@@ -3758,26 +3774,26 @@ STA_FAR                        $ff77   124
 CMP_FAR                        $ff7a   125
 PRIMM                          $ff7d   126D   260    427    450    801
                                        893   1102   1493   1504   1647
-                                      1730   2152   3188   3196
+                                      1730   2152   3202   3210
 CINT                           $ff81   127
 IOINIT                         $ff84   128
 SETMSG                         $ff90   129D   329
-SECOND                         $ff93   130D  2452   2682   2805   2823
-TKSA                           $ff96   131D  2473   2566   2721   2739
+SECOND                         $ff93   130D  2466   2696   2819   2837
+TKSA                           $ff96   131D  2487   2580   2735   2753
 MEMTOP                         $ff99   132
 MEMBOT                         $ff9c   133
 KEY                            $ff9f   134
 SETTMO                         $ffa2   135
-ACPTR                          $ffa5   136D  2474   2481   2489   2572
-                                      2585   2724
-CIOUT                          $ffa8   137D  2455   2695   2708   2743
-                                      2807
-UNTALK                         $ffab   138D  2495   2597   2728
-UNLSN                          $ffae   139D  2458   2698   2711   2746
-                                      2808   2824
-LISTEN                         $ffb1   140D  2450   2680   2737   2803
+ACPTR                          $ffa5   136D  2488   2495   2503   2586
+                                      2599   2738
+CIOUT                          $ffa8   137D  2469   2709   2722   2757
                                       2821
-TALK                           $ffb4   141D  2471   2563   2719
+UNTALK                         $ffab   138D  2509   2611   2742
+UNLSN                          $ffae   139D  2472   2712   2725   2760
+                                      2822   2838
+LISTEN                         $ffb1   140D  2464   2694   2751   2817
+                                      2835
+TALK                           $ffb4   141D  2485   2577   2733
 READSS                         $ffb7   142
 SETLFS                         $ffba   143
 SETNAM                         $ffbd   144
@@ -3795,12 +3811,13 @@ CHROUT                         $ffd2   151D   373    720    747    837
                                       1885   1889   1891   1895   1899
                                       1909   1916   1922   1924   2100
                                       2106   2137   2145   2163   2166
-                                      2300   2351   2429   2514   2589
+                                      2300   2327   2365   2443   2528
+                                      2603
 LOAD                           $ffd5   152D  1097
 SAVE                           $ffd8   153D  1088
 SETTIM                         $ffdb   154
 GETTIM                         $ffde   155
-STOP                           $ffe1   156D   702   1021   1629   2593
+STOP                           $ffe1   156D   702   1021   1629   2607
 GETIN                          $ffe4   157
 CLALL                          $ffe7   158
 SCAN                           $ffea   159
@@ -3821,9 +3838,9 @@ Long_AC                        $0059    56D   208    210    218    222
                                       1943   1946   1951   1954   2003
                                       2004   2005   2006   2013   2047
                                       2054   2055   2056   2067   2068
-                                      2075   2076   2078   2080   2539
-                                      2578   2579   2580   2581   2617
-                                      2622
+                                      2075   2076   2078   2080   2322
+                                      2553   2592   2593   2594   2595
+                                      2631   2636
 Long_PC                        $0061    58D   538    597    613    646
                                        648    671    673    748    792
                                        794    838    840    856    858
@@ -3832,35 +3849,35 @@ Long_PC                        $0061    58D   538    597    613    646
                                       1476   1485   1491   1513   1517
                                       1551   1554   1952   1955   2097
                                       2103   2108   2111   2112   2249
-                                      2250   2257   2259   2334   2347
-                                      2350   2364   2377   2386   2387
-                                      2388   2389   2390   2391   2392
-                                      2393   2394   2395   2396   2397
-                                      2413   2414   2415   2725   2742
+                                      2250   2257   2259   2348   2361
+                                      2364   2378   2391   2400   2401
+                                      2402   2403   2404   2405   2406
+                                      2407   2408   2409   2410   2411
+                                      2427   2428   2429   2739   2756
 Long_CT                        $005d    57D   211    212    214    215
                                        219    223    552    581    598
                                        695    696    699   1403   1409
                                       1417   1418   1623   1635   1638
                                       2235   2236   2238   2239   2240
-                                      2340   2341   2383   2384   2385
-                                      2408   2422   2425   2444   2459
-                                      2627   2645
+                                      2354   2355   2397   2398   2399
+                                      2422   2436   2439   2458   2473
+                                      2641   2659
 WHITE                          $0005    14D   470    736    744    888
-                                       902   1815   2105   3198   3199
-                                      3200   3201   3202   3203   3204
-                                      3205   3206   3207   3208   3209
-                                      3210   3211   3212   3213   3214
-                                      3215   3216   3217
-LRED                           $0096    16D   744    886    900   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
-CR                             $000d    18D   397    451   1505   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
+                                       902   1815   2105   3212   3213
+                                      3214   3215   3216   3217   3218
+                                      3219   3220   3221   3222   3223
+                                      3224   3225   3226   3227   3228
+                                      3229   3230   3231
+LRED                           $0096    16D   744    886    900   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
+CR                             $000d    18D   397    451   1505   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
 Op_Flag                        $006c    66D  1141   1161   1273   1323
                                       1436   1467   1662   1673   1690
                                       1707   1715   1743   1773   1791
@@ -3879,7 +3896,7 @@ Long_DA                        $0065    59D   566    656    657    659
 Buf_Index                      $006f    72D   401   1053   1066   1251
                                       1968   1989   2015   2024   2195
                                       2196   2206   2214   2215   2293
-                                      2440   2441   2536   2545   2610
+                                      2454   2455   2550   2559   2624
 Op_Size                        $006d    70D  1465   1466   1477   1496
                                       1497   1632   1633   1637   1706
                                       1708   1722   1835   1856   1875
@@ -3888,12 +3905,12 @@ Op_Code                        $006b    65D  1206   1224   1225   1407
                                       1434   1464   1472   1490   1565
                                       1681   1692   1739   1749   1795
                                       1802   1820   1861
-STATUS                         $0090    77D  1041   1098   2568   2573
-                                      2587   2684   2723   2741   2801
-                                      2809   2819   2825
-FA                             $00ba    81D  1034   1072   2449   2470
-                                      2544   2562   2679   2718   2736
-                                      2802   2820
+STATUS                         $0090    77D  1041   1098   2582   2587
+                                      2601   2698   2737   2755   2815
+                                      2823   2833   2839
+FA                             $00ba    81D  1034   1072   2463   2484
+                                      2558   2576   2693   2732   2750
+                                      2816   2834
 Adr_Flags                      $0069    63D  1700   1838   1841   1883
                                       1887   1893   1897   1902   1907
                                       1911
@@ -3902,7 +3919,7 @@ Bank                           $0002    28D   284    287    343    351
 SPL                            $000c    43D   327    361    814    825
                                        829
 MODE_80                        $00d7    87D   693    797    884    898
-SA                             $00b9    80D  1036   1086   1109   2565
+SA                             $00b9    80D  1036   1086   1109   2579
 VERCK                          $0093    78D   437   1082   1091   1099
 Dig_Cnt                        $006e    71D  2002   2014   2041   2089
 FNADR                          $00bb    82D  1043   1045   1059
@@ -3944,9 +3961,9 @@ Long_AC                        $0059    56D   208    210    218    222
                                       1943   1946   1951   1954   2003
                                       2004   2005   2006   2013   2047
                                       2054   2055   2056   2067   2068
-                                      2075   2076   2078   2080   2539
-                                      2578   2579   2580   2581   2617
-                                      2622
+                                      2075   2076   2078   2080   2322
+                                      2553   2592   2593   2594   2595
+                                      2631   2636
 Long_PC                        $0061    58D   538    597    613    646
                                        648    671    673    748    792
                                        794    838    840    856    858
@@ -3955,35 +3972,35 @@ Long_PC                        $0061    58D   538    597    613    646
                                       1476   1485   1491   1513   1517
                                       1551   1554   1952   1955   2097
                                       2103   2108   2111   2112   2249
-                                      2250   2257   2259   2334   2347
-                                      2350   2364   2377   2386   2387
-                                      2388   2389   2390   2391   2392
-                                      2393   2394   2395   2396   2397
-                                      2413   2414   2415   2725   2742
+                                      2250   2257   2259   2348   2361
+                                      2364   2378   2391   2400   2401
+                                      2402   2403   2404   2405   2406
+                                      2407   2408   2409   2410   2411
+                                      2427   2428   2429   2739   2756
 Long_CT                        $005d    57D   211    212    214    215
                                        219    223    552    581    598
                                        695    696    699   1403   1409
                                       1417   1418   1623   1635   1638
                                       2235   2236   2238   2239   2240
-                                      2340   2341   2383   2384   2385
-                                      2408   2422   2425   2444   2459
-                                      2627   2645
+                                      2354   2355   2397   2398   2399
+                                      2422   2436   2439   2458   2473
+                                      2641   2659
 WHITE                          $0005    14D   470    736    744    888
-                                       902   1815   2105   3198   3199
-                                      3200   3201   3202   3203   3204
-                                      3205   3206   3207   3208   3209
-                                      3210   3211   3212   3213   3214
-                                      3215   3216   3217
-LRED                           $0096    16D   744    886    900   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
-CR                             $000d    18D   397    451   1505   3198
-                                      3199   3200   3201   3202   3203
-                                      3204   3205   3206   3207   3208
-                                      3209   3210   3211   3212   3213
-                                      3214   3215   3216   3217
+                                       902   1815   2105   3212   3213
+                                      3214   3215   3216   3217   3218
+                                      3219   3220   3221   3222   3223
+                                      3224   3225   3226   3227   3228
+                                      3229   3230   3231
+LRED                           $0096    16D   744    886    900   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
+CR                             $000d    18D   397    451   1505   3212
+                                      3213   3214   3215   3216   3217
+                                      3218   3219   3220   3221   3222
+                                      3223   3224   3225   3226   3227
+                                      3228   3229   3230   3231
 Op_Flag                        $006c    66D  1141   1161   1273   1323
                                       1436   1467   1662   1673   1690
                                       1707   1715   1743   1773   1791
@@ -4002,7 +4019,7 @@ Long_DA                        $0065    59D   566    656    657    659
 Buf_Index                      $006f    72D   401   1053   1066   1251
                                       1968   1989   2015   2024   2195
                                       2196   2206   2214   2215   2293
-                                      2440   2441   2536   2545   2610
+                                      2454   2455   2550   2559   2624
 Op_Size                        $006d    70D  1465   1466   1477   1496
                                       1497   1632   1633   1637   1706
                                       1708   1722   1835   1856   1875
@@ -4012,17 +4029,17 @@ Op_Code                        $006b    65D  1206   1224   1225   1407
                                       1681   1692   1739   1749   1795
                                       1802   1820   1861
 Mon_Data                       $040c   114D   993   1003   1015   1042
-                                      1044   2609   2631   2706   2759
-                                      2764   2768   2782   2787
+                                      1044   2623   2645   2720   2773
+                                      2778   2782   2796   2801
 Buffer                         $0200    96D   393    402   1054   1508
                                       1510   1519   1523   1531   2197
-                                      2216   2442   2453
-STATUS                         $0090    77D  1041   1098   2568   2573
-                                      2587   2684   2723   2741   2801
-                                      2809   2819   2825
-FA                             $00ba    81D  1034   1072   2449   2470
-                                      2544   2562   2679   2718   2736
-                                      2802   2820
+                                      2216   2456   2467
+STATUS                         $0090    77D  1041   1098   2582   2587
+                                      2601   2698   2737   2755   2815
+                                      2823   2833   2839
+FA                             $00ba    81D  1034   1072   2463   2484
+                                      2558   2576   2693   2732   2750
+                                      2816   2834
 Op_Ix                          $0406   107D  1142   1244   1247   1290
                                       1324   1338   1352   1366   1382
                                       1393
@@ -4033,18 +4050,18 @@ Bank                           $0002    28D   284    287    343    351
                                        522    524    527    774
 Op_Len                         $0407   108D  1143   1246   1446   1452
                                       1455   1603
-Disk_Msg                       $0434   115D  2475   2482   2490   2494
-                                      2512
-Disk_Status                    $040b   112D  2480   2484   2485   2496
-                                      2671
+Disk_Msg                       $0434   115D  2489   2496   2504   2508
+                                      2526
+Disk_Status                    $040b   112D  2494   2498   2499   2510
+                                      2685
 SPL                            $000c    43D   327    361    814    825
                                        829
-Disk_Sector                    $040a   111D  2623   2644   2664   2791
+Disk_Sector                    $040a   111D  2637   2658   2678   2805
 MODE_80                        $00d7    87D   693    797    884    898
-SA                             $00b9    80D  1036   1086   1109   2565
+SA                             $00b9    80D  1036   1086   1109   2579
 VERCK                          $0093    78D   437   1082   1091   1099
 Dig_Cnt                        $006e    71D  2002   2014   2041   2089
-Disk_Track                     $0409   110D  2618   2665   2788
+Disk_Track                     $0409   110D  2632   2679   2802
 Op_Mne                         $0403   106D  1158   1164   1171
 Ix_Mne                         $0402   105D  1196   1392   1575
 X_Vector                       $0400   104D   314    316    505
