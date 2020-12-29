@@ -495,6 +495,7 @@ Jump_Table
          .WORD Converter        ; +
          .WORD Converter        ; &
          .WORD Converter        ; %
+         .WORD Converter        ; '
 
 
 ***************
@@ -1998,7 +1999,7 @@ Module Read_Number
          PHY
          PHZ
          LDA  #0
-         STA  Dig_Cnt               ; count columns read
+         STA  Dig_Cnt           ; count columns read
          STA  Long_AC           ; clear result Long_AC
          STA  Long_AC+1
          STA  Long_AC+2
@@ -2011,6 +2012,7 @@ Module Read_Number
          JSR  Get_Char          ; character after '
          STA  Long_AC
          INC  Dig_Cnt
+         INC  Buf_Index         ; position on delimiter
          BRA  _exit
 
 _numeric LDY  #3                ; $ + % %
@@ -2208,20 +2210,20 @@ EndMod
 Module Get_Char
 ***************
 
-         PHX
+         PHX                  ; save X
          LDX  Buf_Index
          INC  Buf_Index
          LDA  Buffer,X
-         CPX  #1
+         CPX  #1              ; column index
          PLX
-         BCC  _regc
-         CMP  #';'            ; register
+         BCC  _regc           ; branch at 1st. column
+         CMP  #';'            ; register ?
          BEQ  _return
-         CMP  #'?'            ; help
+         CMP  #'?'            ; error marker
          BEQ  _return
-_regc    CMP  #0
+_regc    CMP  #0              ; end of buffer ?
          BEQ  _return
-         CMP  #':'
+         CMP  #':'            ; end of statement ?
 _return  RTS
 EndMod
 
