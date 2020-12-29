@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  28-Dec_2020 *
+* for The MEGA65  29-Dec_2020 *
 *******************************
 
 .CPU 45GS02
@@ -175,7 +175,7 @@ Module header
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 28-DEC-20",0
+        .BYTE " BIT SHIFTER 29-DEC-20",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -522,6 +522,7 @@ Module LAC_To_PC
          LDA  Long_AC+1
          STA  Bank+1
          LDA  Long_AC+2
+         ORA  Long_AC+3
          STA  Bank
 _error   RTS
 EndMod
