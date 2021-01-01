@@ -1,6 +1,6 @@
 *******************************
 * BSM = Bit Shifter's Monitor *
-* for The MEGA65  29-Dec_2020 *
+* for The MEGA65  01-Jan-2021 *
 *******************************
 
 .CPU 45GS02
@@ -93,6 +93,7 @@ R_Margin   = $e7        ; SCRT   default = 39 or 79
 
 QTSW       = $f4        ; Quote switch
 
+Stack      = $0100
 Buffer     = $0200      ; input buffer
 
 IIRQ       = $0314
@@ -106,10 +107,12 @@ Ix_Mne      .BSS  1     ; index to mnemonics table
 Op_Mne      .BSS  3     ; 3 bytes for mnemonic
 Op_Ix       .BSS  1     ; type of constant
 Op_Len      .BSS  1     ; length of operand
-Disk_Unit   .BSS  1     ; unit = device
+Disk_Unit   .BSS  1     ; target unit
+Disk_Src    .BSS  1     ; source unit
 Disk_Track  .BSS  1     ; logical track  1 -> 255
 Disk_Sector .BSS  1     ; logical sector 0 -> 255
 Disk_Status .BSS  1     ; BCD value of status
+File_Ext    .BSS  3     ; file extension
 
 Mon_Data    .BSS 40     ; buffer for hunt and filename
 Disk_Msg    .BSS 40     ; disk status as text message
@@ -169,13 +172,13 @@ Module header
 
         .WORD $2001             ; load address
         .WORD Link              ; line link
-        .WORD 2020              ; line number
+        .WORD 2021              ; line number
         .BYTE $fe,$02           ; BANK token
         .BYTE "0:"              ; BANK argument
         .BYTE $9e               ; SYS  token
         .BYTE "(8235):"         ; $202d
         .BYTE $8f               ; REM  token
-        .BYTE " BIT SHIFTER 29-DEC-20",0
+        .BYTE " BIT SHIFTER 01-JAN-21",0
 Link    .WORD 0                 ; BASIC end marker
 
         ; copy image to $030000
@@ -435,7 +438,7 @@ Module Mon_Select
 *****************
 
          STA  VERCK
-         CPX  #22
+         CPX  #23
          LBCS  Load_Save
          TXA
          ASL  A
@@ -455,7 +458,7 @@ Command_Char
 ************
 
          ;      0123456789abcdef
-         .BYTE "ABCDFGHJMRTX@.>;?"
+         .BYTE "ABCDFGHJMRTUX@.>;?"
 
 ***********
 Cons_Prefix
@@ -485,6 +488,7 @@ Jump_Table
          .WORD Mon_Memory       ; M
          .WORD Mon_Register     ; R
          .WORD Mon_Transfer     ; T
+         .WORD Mon_Unit_Copy    ; U
          .WORD Mon_Exit         ; X
          .WORD Mon_DOS          ; @
          .WORD Mon_Assemble     ; .
@@ -2006,7 +2010,7 @@ Module Read_Number
          STA  Long_AC+3
 
          JSR  Get_Glyph         ; get 1st. character
-         BEQ  _exit
+         LBEQ _exit
          CMP  #APOSTR           ; character entry 'C
          BNE  _numeric
          JSR  Get_Char          ; character after '
@@ -2042,13 +2046,17 @@ _valid   SBC  #'0'-1
 
          CPY  #1                ; decimal
          BNE  _laba
-         LDX  #3                ; push Long_AC * 2
-         CLC
+
+         LDX  #3                ; push Long_AC
 _push    LDA  Long_AC,X
-         ROL  A
          PHA
          DEX
          BPL  _push
+         TSX                    ; double pushed value
+         ASL  Stack+1,X
+         ROL  Stack+2,X
+         ROL  Stack+3,X
+         ROL  Stack+4,X
 
 _laba    LDX  Num_Bits,Y
 _shift   ASL  Long_AC
@@ -2446,6 +2454,289 @@ _next    DEY
          RTS
 EndMod
 
+****************
+Module Read_Unit
+****************
+         JSR  Read_Number       ; unit
+         LBCS Mon_Error
+         LDA  Long_AC
+         CMP  #8
+         LBCC Mon_Error
+         CMP  #16
+         LBCS Mon_Error
+         DEC  Buf_Index
+         RTS
+EndMod
+
+MEM_BUF = $870
+MEM_DIR = $87F
+
+*****************
+Module Copy_Files
+*****************
+
+; Input: Long_CT = directory cache
+
+         LDA  #$24
+         STA  Long_CT
+_lpent   LDZ  #0
+_lpquote INZ
+         LDA  [Long_CT],Z
+         CMP  #'B'              ; BLOCKS FREE
+         LBEQ _exit
+         CMP  #' '
+         BEQ  _lpquote
+         CMP  #QUOTE
+         LBNE _exit
+         LDY  #0
+_lpfn    INZ
+         LDA  [Long_CT],Z
+         CMP  #QUOTE
+         BEQ  _endfn
+         STA  Mon_Data,Y
+         INY
+         CPY  #16
+         BCC  _lpfn
+         BRA  _exit
+_endfn   LDA  #','
+         STA  Mon_Data,Y
+         INY
+_lptype  INZ
+         LDA  [Long_CT],Z
+         CMP  #' '
+         BEQ  _lptype
+         STA  Mon_Data,Y
+         STA  File_Ext
+         INZ
+         LDA  [Long_CT],Z
+         STA  File_Ext+1
+         INZ
+         LDA  [Long_CT],Z
+         STA  File_Ext+2
+         LDA  #0
+         INY
+         STY  FNLEN
+         STA  Mon_Data,Y
+         STA  Long_AC
+         STA  Long_AC+1
+         LDA  #<MEM_BUF
+         STA  Long_AC+2
+         LDA  #>MEM_BUF
+         STA  Long_AC+3
+
+         JSR  List_Filename
+         LDA  Disk_Src
+         JSR  Load_File
+         LDA  Long_PC+2
+         AND  #15
+         JSR  A_To_Hex
+         TXA
+         JSR  CHROUT
+         LDX  Long_PC+1
+         LDA  Long_PC
+         JSR  Print_XA_Hex
+         LDY  FNLEN
+         LDA  #','
+         STA  Mon_Data,Y
+         LDA  #'W'
+         STA  Mon_Data+1,Y
+         LDA  #0
+         STA  Mon_Data+2,Y
+         LDA  Disk_Unit         ; FA
+         JSR  Save_File
+
+         CLC
+         LDA  Long_CT
+         ADC  #$20
+         STA  Long_CT
+         LBCC _lpent
+         INC  Long_CT+1
+         LBNE _lpent
+_exit    RTS
+EndMod
+
+********************
+Module Mon_Unit_Copy
+********************
+
+; Ut=s,pattern
+
+         JSR  Read_Unit         ; target unit
+         STA  Disk_Unit
+         JSR  Get_Glyph
+         CMP  #'='
+         LBNE Mon_Error
+         JSR  Read_Unit         ; source unit
+         STA  Disk_Src
+         STA  FA
+         LDY  #-1
+_loopfn  INY
+         LDA  _dir,Y
+         STA  Mon_Data,Y
+         BNE  _loopfn
+         JSR  Get_Glyph         ; delimiter ?
+         TAX
+         BEQ  _laba
+         CMP  #','
+         LBNE Mon_Error
+         LDX  Buf_Index
+         DEX
+         LDY  #2
+_pat     INX
+         INY
+         CPY  #18
+         LBCS Mon_Error
+         LDA  Buffer,X
+         STA  Mon_Data,Y
+         BNE  _pat
+_laba    LDZ  #0
+         STZ  SA                ; loading directory
+         STZ  Long_AC
+         STZ  Long_AC+1
+         LDA  #<MEM_DIR
+         STA  Long_AC+2
+         LDA  #>MEM_DIR
+         STA  Long_AC+3
+         JSR  LAC_To_LCT        ; Long_CT = directory pointer
+         LDA  Disk_Src
+         JSR  Load_File
+         JSR  Copy_Files
+         JMP  Main
+
+_dir     .BYTE "$0:*",0
+EndMod
+
+
+********************
+Module Send_Filename
+********************
+
+        LDA  FA
+        JSR  LISTEN
+        LDA  SA
+        ORA  #$f0
+        JSR  SECOND
+        LDY  #0
+        STY  STATUS
+_fname  LDA  Mon_Data,Y
+        BEQ  _stop
+        JSR  CIOUT
+        INY
+        CPY  #20
+        BCC  _fname
+_stop   JSR  UNLSN
+        JMP  Get_Disk_Status
+EndMod
+
+********************
+Module List_Filename
+********************
+        JSR  CR_Erase
+        LDY  #-1
+_loop   INY
+        LDA  Mon_Data,Y
+        CMP  #','
+        BEQ  _fill
+        JSR  CHROUT
+        BRA  _loop
+_fill   LDA  #' '
+_blank  JSR  CHROUT
+        INY
+        CPY  #16
+        BCC  _blank
+        LDY  #0
+_ext    LDA  File_Ext,Y
+        JSR  CHROUT
+        INY
+        CPY  #3
+        BCC  _ext
+        JMP  Print_Blank
+EndMod
+
+****************
+Module Save_File
+****************
+
+; Input : (Long_AC) = start address
+;         (Long_PC) = last  address
+
+        STA  FA
+        LDX  #1
+        STX  SA
+        JSR  Send_Filename
+        BNE  _error
+        LDA  FA
+        JSR  LISTEN
+        LDA  SA
+        ORA  #$60
+        JSR  SECOND
+        LDZ  #0
+        STZ  STATUS
+_loop   LDA  [Long_AC],Z
+        JSR  CIOUT
+        CPZ  Long_PC
+        BNE  _cont
+        LDA  Long_AC+1
+        CMP  Long_PC+1
+        BNE  _cont
+        LDA  Long_AC+2
+        CMP  Long_PC+2
+        BEQ  _stop
+
+_cont   LDX  STATUS
+        BNE  _stop
+        INZ
+        BNE  _loop
+        INW  Long_AC+1
+        BNE  _loop
+_stop   JSR  UNLSN
+        JMP  Close_File
+_error  JMP  Print_Disk_Msg
+EndMod
+
+****************
+Module Load_File
+****************
+
+; Input : (Long_AC) = start address
+; Output: (Long_PC) = last  address
+
+        STA  FA
+        LDX  #0
+        STX  SA
+        JSR  LAC_To_LPC      ; Long_PC = load address
+        JSR  Send_Filename
+        BNE  _error
+        LDA  FA
+        JSR  TALK
+        LDA  SA
+        ORA  #$60
+        JSR  TKSA
+        LDZ  #0
+        STZ  STATUS
+_loop   JSR  ACPTR
+        STA  [Long_PC],Z
+        LDX  STATUS
+        BNE  _stop
+        INZ
+        BNE  _loop
+        INW  Long_PC+1
+        BNE  _loop
+_stop   STZ  Long_PC
+        JSR  UNTALK
+
+**********
+Close_File
+**********
+
+        LDA  FA
+        JSR  LISTEN
+        LDA  SA
+        ORA  #$e0
+        JSR  SECOND
+        JMP  UNLSN
+_error  JMP  Print_Disk_Msg
+EndMod
 
 ***************
 Module Mon_Disk
@@ -3233,4 +3524,4 @@ Module Mon_Help
    JMP Main
 End_Mod
 
-         .FILL $8000-* ($ff) ; 3749 bytes
+         .FILL $8000-* ($ff)
