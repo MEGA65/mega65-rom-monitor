@@ -2,6 +2,7 @@
 # and running the emulator
 
 bsa bsmon
+mv 10000-11FFF.MONITOR bsmon.rom
 cat bsm.prg bsmon.rom >bsm
 c1541 -format "bsmon,bs" D81 "bsmon.d81" 8
 c1541 -attach "bsmon.d81" -write bsm

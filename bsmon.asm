@@ -1,11 +1,28 @@
-*******************************
-* BSM = Bit Shifter's Monitor *
-* for The MEGA65  01-Jan-2021 *
-*******************************
+***************************************************************************
+*                                                                         *
+*                          BBBBBBBBB    SSSSSSSS                          *
+*                          BBB    BBB  SSS    SSS                         *
+*                          BBB    BBB  SSS                                *
+*                          BBBBBBBBB    SSSSSSSS                          *
+*                          BBB    BBB         SSS                         *
+*                          BBB    BBB  SSS    SSS                         *
+*                          BBBBBBBBB    SSSSSSSS                          *
+*                                                                         *
+* MMM   MMM    OOOOOOO    NNN    NN  III  TTTTTTTTT  OOOOOOO    RRRRRRRR  *
+* MMMM MMMM   OOO   OOO   NNNN   NN  III     TTT    OOO   OOO   RRR   RRR *
+* MMMMMMMMM  OOO     OOO  NNNNN  NN  III     TTT   OOO     OOO  RRR   RRR *
+* MMM M MMM  OOO     OOO  NNN NN NN  III     TTT   OOO     OOO  RRRRRRRR  *
+* MMM   MMM  OOO     OOO  NNN  NNNN  III     TTT   OOO     OOO  RRR RRR   *
+* MMM   MMM   OOO   OOO   NNN   NNN  III     TTT    OOO   OOO   RRR  RRR  *
+* MMM   MMM    OOOOOOO    NNN    NN  III     TTT     OOOOOOO    RRR   RRR *
+*                                                                         *
+*             Bit Shifter's Monitor for the MEGA65 - 05-JAN-2021          *
+*                                                                         *
+***************************************************************************
 
 .CPU 45GS02
 
-.STORE $6000,$2000,"bsmon.rom"
+.STORE $6000,$2000,"10000-11FFF.MONITOR"
 
 *************
 * Constants *
@@ -102,7 +119,6 @@ EXMON      = $032e
 
 & = $400                ; bottom of BASIC runtime stack
                         ; should be a safe space
-X_Vector    .BSS  2     ; exit vector (ROM version dependent)
 Ix_Mne      .BSS  1     ; index to mnemonics table
 Op_Mne      .BSS  3     ; 3 bytes for mnemonic
 Op_Ix       .BSS  1     ; type of constant
@@ -117,8 +133,7 @@ File_Ext    .BSS  3     ; file extension
 Mon_Data    .BSS 40     ; buffer for hunt and filename
 Disk_Msg    .BSS 40     ; disk status as text message
 
-EXIT_OLD   = $cf2e      ; exit address for ROM 910110
-EXIT       = $cfa4      ; exit address for ROM 911001
+EXIT       = $cfaf      ; exit address for ROM 92xxxx
 
 SETBNK     = $ff6b
 JSRFAR     = $ff6e
@@ -267,10 +282,7 @@ Module Mon_Break
 ; pull BP, Z, Y, X, A,SR,PCL,PCH
 ;       7  6  5  4  3  2  1  0
 
-         LDX  #7
-         BIT  EXIT      ; version
-         BPL  _loop
-         DEX
+         LDX  #6
 _loop    PLA
          STA  PCH,X
          DEX
@@ -309,14 +321,8 @@ _loop    STA  AC,X
 
          LDA  #<EXIT     ; ROM 911110
          LDX  #>EXIT
-         BIT  EXIT       ; $20 (JSR) or $ff ?
-         BPL  _store
-         LDA  #<EXIT_OLD ; ROM 910111
-         LDX  #>EXIT_OLD
 _store   STA  PCL
-         STA  X_Vector
          STX  PCH
-         STX  X_Vector+1
 EndMod
 
 ****************
@@ -489,7 +495,7 @@ Jump_Table
          .WORD Mon_Register     ; R
          .WORD Mon_Transfer     ; T
          .WORD Mon_Unit_Copy    ; U
-         .WORD Mon_Exit         ; X
+         .WORD EXIT             ; X
          .WORD Mon_DOS          ; @
          .WORD Mon_Assemble     ; .
          .WORD Mon_Set_Memory   ; >
@@ -500,13 +506,6 @@ Jump_Table
          .WORD Converter        ; &
          .WORD Converter        ; %
          .WORD Converter        ; '
-
-
-***************
-Module Mon_Exit
-***************
-
-         JMP  (X_Vector)
 
 ****************
 Module LAC_To_PC
@@ -756,7 +755,9 @@ _col     SEC
          ADC  #8
          TAZ
          CMP  #64
-         BCC  _col
+         BBR7 MODE_80,_next
+         CMP  #32
+_next    BCC  _col
          JSR  Print_CR
          JSR  Inc_LPC
          PLX
@@ -895,7 +896,7 @@ _loop    LDA  #LRED
          BNE  _loop
 
          JSR  PRIMM
-         .BYTE $3a,$12,$00      ; : reverse on
+         .BYTE $12,$00          ; : reverse on
 
          LDZ  #0
          LDX  #2                ; 4 blocks in 80 columns
@@ -3501,7 +3502,7 @@ Module Mon_Help
    JSR PRIMM
 
    .BYTE LRED,"A",WHITE,"SSEMBLE     - A ADDRESS MNEMONIC OPERAND",CR
-   .BYTE LRED,"B",WHITE,"ITMAPS      - B [FROM [TO]]",CR
+   .BYTE LRED,"B",WHITE,"ITMAPS      - B [FROM]",CR
    .BYTE LRED,"C",WHITE,"OMPARE      - C FROM TO WITH",CR
    .BYTE LRED,"D",WHITE,"ISASSEMBLE  - D [FROM [TO]]",CR
    .BYTE LRED,"F",WHITE,"ILL         - F FROM TO FILLBYTE",CR
