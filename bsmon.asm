@@ -16,7 +16,7 @@
 * MMM   MMM   OOO   OOO   NNN   NNN  III     TTT    OOO   OOO   RRR  RRR  *
 * MMM   MMM    OOOOOOO    NNN    NN  III     TTT     OOOOOOO    RRR   RRR *
 *                                                                         *
-*             Bit Shifter's Monitor for the MEGA65 - 05-JAN-2021          *
+*             Bit Shifter's Monitor for the MEGA65 - 15-JAN-2021          *
 *                                                                         *
 ***************************************************************************
 
@@ -1123,6 +1123,10 @@ Module Mon_Fill
          LBCS Mon_Error         ; Long_CT = count
          JSR  Get_LAC           ; Long_AC = fill byte
          LBCS Mon_Error
+         LDA  Long_AC+1
+         ORA  Long_AC+2
+         ORA  Long_AC+3
+         LBNE Mon_Error         ; not a byte value
          JSR  Print_CR
          LDZ  #0
 _loop    LDA  Long_AC
