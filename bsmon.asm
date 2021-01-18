@@ -16,7 +16,7 @@
 * MMM   MMM   OOO   OOO   NNN   NNN  III     TTT    OOO   OOO   RRR  RRR  *
 * MMM   MMM    OOOOOOO    NNN    NN  III     TTT     OOOOOOO    RRR   RRR *
 *                                                                         *
-*             Bit Shifter's Monitor for the MEGA65 - 15-JAN-2021          *
+*             Bit Shifter's Monitor for the MEGA65 - 18-JAN-2021          *
 *                                                                         *
 ***************************************************************************
 
@@ -282,7 +282,7 @@ Module Mon_Break
 ; pull BP, Z, Y, X, A,SR,PCL,PCH
 ;       7  6  5  4  3  2  1  0
 
-         LDX  #6
+         LDX  #7
 _loop    PLA
          STA  PCH,X
          DEX
